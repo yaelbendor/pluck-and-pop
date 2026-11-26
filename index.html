@@ -113,7 +113,7 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:
     <div class="howto">Use <b>two fingers</b>: pinch a bump to <b>pop</b> it, or pinch a hair and <b>pull</b> 🔊 sound on!</div>
     <div class="tip" id="iosTip" hidden>Play it like an app: tap <b>Share</b>, then <b>Add to Home Screen</b></div>
   </div>
-  <div id="ver">v6</div>
+  <div id="ver">v7</div>
 </div>
 
 <div id="rushOver" class="screen hide">
@@ -1628,35 +1628,41 @@ function drawPimple(p) {
   }
 }
 
-function drawRoot(x, y, rad, pal = ROOT_PALS[0], ang = -Math.PI / 2, juicy = false) {
-  if (juicy) {
-    // clear jelly coating hugging the bulb and tapering up the hair
-    const ca = Math.cos(ang), sa = Math.sin(ang), L = rad * 2.7, w = rad * 1.3;
-    ctx.beginPath();
-    ctx.moveTo(x - sa * w, y + ca * w);
-    ctx.quadraticCurveTo(x - sa * w * .9 + ca * L * .55, y + ca * w * .9 + sa * L * .55, x + ca * L, y + sa * L);
-    ctx.quadraticCurveTo(x + sa * w * .9 + ca * L * .55, y - ca * w * .9 + sa * L * .55, x + sa * w, y - ca * w);
-    ctx.arc(x, y, w, ang + Math.PI / 2, ang + Math.PI * 1.5);
-    ctx.fillStyle = 'rgba(255,255,255,.42)'; ctx.fill();
-    ctx.strokeStyle = hexA(pal[3], .55); ctx.lineWidth = Math.max(1.2, 1.6 * S); ctx.stroke();
-    ctx.strokeStyle = 'rgba(255,255,255,.85)'; ctx.lineWidth = rad * .14; ctx.lineCap = 'round';
-    ctx.beginPath(); ctx.moveTo(x - sa * w * .55 + ca * rad * .6, y + ca * w * .55 + sa * rad * .6); ctx.lineTo(x - sa * w * .25 + ca * L * .7, y + ca * w * .25 + sa * L * .7); ctx.stroke();
+// smooth gel outline around a root bulb, with a soft rounded bump where it meets the hair
+function coatPath(x, y, rad, ang) {
+  const ca = Math.cos(ang), sa = Math.sin(ang), n = 32;
+  ctx.beginPath();
+  for (let i = 0; i <= n; i++) {
+    const a = i / n * TAU;
+    // bump toward the hair (a = 0 points along the hair), tiny wobble elsewhere
+    const k = 1.24 + .2 * Math.pow(Math.max(0, Math.cos(a)), 6) + .025 * Math.sin(a * 3 + 1.3);
+    const lx = Math.cos(a) * rad * k, ly = Math.sin(a) * rad * k;
+    const px = x + lx * ca - ly * sa, py = y + lx * sa + ly * ca;
+    i ? ctx.lineTo(px, py) : ctx.moveTo(px, py);
   }
+  ctx.closePath();
+}
+function drawRoot(x, y, rad, pal = ROOT_PALS[0], ang = -Math.PI / 2, juicy = false) {
   // big round pearly bulb
   const g = ctx.createRadialGradient(x - rad * .35, y - rad * .35, rad * .1, x, y, rad);
   g.addColorStop(0, pal[0]); g.addColorStop(.5, pal[1]); g.addColorStop(.85, pal[2]); g.addColorStop(1, juicy ? pal[3] : pal[2]);
   ell(x, y, rad, rad); ctx.fillStyle = g; ctx.fill();
   ctx.strokeStyle = pal[3]; ctx.lineWidth = Math.max(1.5, 2 * S); ctx.stroke();
-  ctx.fillStyle = 'rgba(255,255,255,.95)'; ell(x - rad * .38, y - rad * .4, rad * .26, rad * .17, -.6); ctx.fill();
-  if (juicy) {
-    ell(x - rad * .05, y - rad * .62, rad * .09, rad * .09); ctx.fill();
-    // soft rim light and a little glossy droplet
-    ctx.strokeStyle = 'rgba(255,255,255,.7)'; ctx.lineWidth = rad * .1; ctx.lineCap = 'round';
-    ctx.beginPath(); ctx.arc(x, y, rad * .72, Math.PI * .1, Math.PI * .55); ctx.stroke();
-    const dx = x - Math.cos(ang) * rad * 1.05, dy = y - Math.sin(ang) * rad * 1.05, dr = rad * .2;
-    ell(dx, dy, dr, dr); ctx.fillStyle = 'rgba(255,255,255,.55)'; ctx.fill(); ctx.strokeStyle = hexA(pal[3], .6); ctx.lineWidth = 1.2; ctx.stroke();
-    ctx.fillStyle = '#fff'; ell(dx - dr * .3, dy - dr * .3, dr * .3, dr * .3); ctx.fill();
-  }
+  if (!juicy) { ctx.fillStyle = 'rgba(255,255,255,.95)'; ell(x - rad * .38, y - rad * .4, rad * .26, rad * .17, -.6); ctx.fill(); return; }
+  // juicy roots: a glossy, milky gel layer coating only the round bulb
+  // clear in the middle so the bulb shows through, thicker and creamier at the edges
+  const gg = ctx.createRadialGradient(x, y, rad * .55, x, y, rad * 1.45);
+  gg.addColorStop(0, 'rgba(255,250,238,.12)'); gg.addColorStop(.55, 'rgba(255,246,228,.5)'); gg.addColorStop(1, 'rgba(255,240,215,.85)');
+  coatPath(x, y, rad, ang); ctx.fillStyle = gg; ctx.fill();
+  ctx.strokeStyle = 'rgba(232,206,170,.75)'; ctx.lineWidth = Math.max(1.4, 1.8 * S); ctx.stroke();
+  // wet shine: a long highlight along the gel's edge, a glint, and a soft lower rim light
+  ctx.lineCap = 'round';
+  ctx.strokeStyle = 'rgba(255,255,255,.95)'; ctx.lineWidth = rad * .15;
+  ctx.beginPath(); ctx.arc(x, y, rad * 1.06, Math.PI * .95, Math.PI * 1.35); ctx.stroke();
+  ctx.lineWidth = rad * .09; ctx.beginPath(); ctx.arc(x, y, rad * 1.06, Math.PI * 1.45, Math.PI * 1.55); ctx.stroke();
+  ctx.fillStyle = '#fff'; ell(x - rad * .3, y - rad * .32, rad * .17, rad * .11, -.6); ctx.fill();
+  ctx.strokeStyle = 'rgba(255,255,255,.5)'; ctx.lineWidth = rad * .07;
+  ctx.beginPath(); ctx.arc(x, y, rad * 1.04, Math.PI * .12, Math.PI * .48); ctx.stroke();
 }
 function strokePts(pts) {
   ctx.beginPath(); ctx.moveTo(pts[0].x, pts[0].y);
