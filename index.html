@@ -771,16 +771,6 @@ function popPimple(p) {
   const nStars = big ? 6 : 3;
   for (let i = 0; i < nStars; i++) flyers.push({ kind: 'star', x: P.x, y: P.y, vx: rand(-260, 260), vy: rand(-520, -220), t: 0, home: .45 + i * .05, val: pts / nStars, rot: rand(0, TAU), col: p.kind === 'gold' ? '#ffd65c' : pick(['#ffd65c', '#ff9fb8', '#9fdcc0']) });
   if (p.kind === 'big' || p.kind === 'ingrown') {
-    // a little squirt of cream, out the side perpendicular to the pinch
-    // aim the side of the pinch that faces the middle of the face, so the cream lands on skin
-    let nx = -Math.sin(p.axis), ny = Math.cos(p.axis);
-    if (nx * (hx(0) - P.x) + ny * (hy(.15) - P.y) < 0) { nx = -nx; ny = -ny; }
-    const nSq = p.kind === 'big' ? 2 : 1;
-    for (let i = 0; i < nSq; i++) {
-      const sp = rand(200, 260) * Math.max(S, .8), a = Math.atan2(ny, nx) + (i ? pick([-1, 1]) * rand(.5, .8) : rand(-.25, .25));
-      squirts.push({ x: P.x + Math.cos(a) * R * .3, y: P.y + Math.sin(a) * R * .3, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 120, trail: [], t: 0, w: R * rand(.55, .68) * (i ? .7 : 1), landed: false });
-    }
-    burst(P.x, P.y, 7, ['cream'], ['#fffaf0'], 260);
     // ...and a splat or two right on the camera lens
     const nSplat = p.kind === 'big' ? (Math.random() < .6 ? 2 : 1) : 1;
     for (let i = 0; i < nSplat; i++) splatScreen(P.x + rand(-90, 90), P.y + rand(-160, 30), i * .09);
@@ -1406,67 +1396,76 @@ function drawIngrownPull(h, hl, rootR) {
 
 /* ---------- cream splats on the camera lens (screen space, on top of everything) ---------- */
 function splatScreen(x, y, delay) {
-  // soft, rounded outline: a few gentle bulges instead of jagged random points
-  const r = rand(34, 54) * Math.max(Math.min(S, 1.3), .9), n = 28, lobes = [];
-  const k1 = 3 + (Math.random() * 3 | 0), p1 = rand(0, TAU), a1 = rand(.08, .14), p2 = rand(0, TAU);
-  for (let i = 0; i < n; i++) { const a = i / n * TAU; lobes.push(1 + a1 * Math.sin(a * k1 + p1) + .05 * Math.sin(a * (k1 + 2) + p2)); }
-  const drops = [];
-  for (let i = 0, m = 3 + (Math.random() * 4 | 0); i < m; i++) { const a = rand(0, TAU); drops.push({ a, d: rand(1.25, 1.9), r: rand(.07, .17) }); }
-  const bumps = [];
-  for (let i = 0, m = 5 + (Math.random() * 3 | 0); i < m; i++) bumps.push({ a: i / m * TAU + rand(-.3, .3), d: rand(.62, .82), r: rand(.3, .46) });
-  splats.push({ x: clamp(x, r + 12, W - r - 12), y: clamp(y, r + 90, H - r - 30), r, lobes, drops, bumps, rot: rand(0, TAU), t: -delay, life: 1.5 + delay,
-    drip: Math.random() < .7 ? { a: rand(-.35, .35), w: rand(.16, .24), len: rand(.5, .9) } : null });
+  const r = rand(34, 50) * Math.max(Math.min(S, 1.3), .9);
+  const arms = [];
+  for (let i = 0, m = 6 + (Math.random() * 4 | 0); i < m; i++) {
+    arms.push({ a: i / m * TAU + rand(-.3, .3), len: r * rand(.3, .85), w: r * rand(.17, .3), drop: Math.random() < .6 ? r * rand(.07, .14) : 0, gap: r * rand(.12, .35) });
+  }
+  const rim = [];
+  for (let i = 0, m = 7; i < m; i++) rim.push({ a: i / m * TAU + rand(-.4, .4), d: r * rand(.4, .55), r: r * rand(.22, .32) });
+  const drips = [];
+  for (let i = 0, m = 1 + (Math.random() * 3 | 0); i < m; i++) drips.push({ x: r * rand(-.45, .45), w: r * rand(.1, .16), max: r * rand(.8, 1.7), sp: rand(.7, 1.3) });
+  splats.push({ x: clamp(x, r + 12, W - r - 12), y: clamp(y, r + 90, H - r - 30), r, arms, rim, drips, t: -delay, life: 1.5 + delay });
 }
-function blobPath(c, r, lobes) {
-  const n = lobes.length, pt = i => { const a = i / n * TAU, k = lobes[(i + n) % n]; return { x: Math.cos(a) * r * k, y: Math.sin(a) * r * k }; };
-  c.beginPath();
-  let p0 = pt(0), p1 = pt(1); c.moveTo((p0.x + p1.x) / 2, (p0.y + p1.y) / 2);
-  for (let i = 1; i <= n; i++) { const a = pt(i), b = pt(i + 1); c.quadraticCurveTo(a.x, a.y, (a.x + b.x) / 2, (a.y + b.y) / 2); }
-  c.closePath();
+// all shapes of one splat as path builders, in screen-aligned local coords (drips run straight down)
+function splatShapes(q, ext) {
+  const out = [], r = q.r;
+  out.push(c => { c.moveTo(r * .5, 0); c.arc(0, 0, r * .5, 0, TAU); });
+  for (const b of q.rim) out.push(c => { const x = Math.cos(b.a) * b.d, y = Math.sin(b.a) * b.d; c.moveTo(x + b.r, y); c.arc(x, y, b.r, 0, TAU); });
+  for (const a of q.arms) {
+    const ca = Math.cos(a.a), sa = Math.sin(a.a), L = r * .35 + a.len * ext, w = a.w;
+    const bx = ca * r * .3, by = sa * r * .3, tx = ca * L, ty = sa * L;
+    out.push(c => {
+      c.moveTo(bx - sa * w, by + ca * w);
+      c.quadraticCurveTo(ca * L * .55 - sa * w * .35, sa * L * .55 + ca * w * .35, tx, ty);
+      c.quadraticCurveTo(ca * L * .55 + sa * w * .35, sa * L * .55 - ca * w * .35, bx + sa * w, by - ca * w);
+      c.closePath();
+    });
+    out.push(c => { const tr = w * .55; c.moveTo(tx + tr, ty); c.arc(tx, ty, tr, 0, TAU); });
+    if (a.drop && ext > .6) { const d = L + a.gap * ext + a.drop, dr = a.drop * Math.min(1, (ext - .6) / .4); out.push(c => { c.moveTo(ca * d + dr, sa * d); c.arc(ca * d, sa * d, dr, 0, TAU); }); }
+  }
+  return out;
 }
+const splatCv = document.createElement('canvas'), sctx = splatCv.getContext('2d');
 function drawSplats() {
   for (const q of splats) {
     if (q.t < 0) continue;
-    const ins = q.t < .16 ? easeOutElastic(q.t / .16 * .7 + .3) : 1;
+    const ext = easeOutBack(clamp(q.t / .12, 0, 1));
     const fade = clamp((q.life - q.t) / .45, 0, 1);
-    const slide = Math.min(q.t, 1.3) * 9; // the whole splat sags down the glass a little
-    ctx.save(); ctx.globalAlpha = fade; ctx.translate(q.x, q.y + slide);
-    // drip running down
-    if (q.drip) {
-      const dl = q.r * q.drip.len * clamp((q.t - .15) / .9, 0, 1), dx = Math.sin(q.drip.a) * q.r * .6, w = q.r * q.drip.w * ins;
-      ctx.fillStyle = 'rgba(150,90,110,.13)'; ctx.beginPath(); ctx.roundRect ? ctx.roundRect(dx - w + 3, 4, w * 2, q.r * .7 + dl, w) : ctx.rect(dx - w + 3, 4, w * 2, q.r * .7 + dl); ctx.fill();
-      ctx.fillStyle = '#fffaf0'; ctx.strokeStyle = '#efd9bf'; ctx.lineWidth = 2;
-      ctx.beginPath(); ctx.roundRect ? ctx.roundRect(dx - w, 0, w * 2, q.r * .7 + dl, w) : ctx.rect(dx - w, 0, w * 2, q.r * .7 + dl); ctx.fill(); ctx.stroke();
-      ell(dx, q.r * .7 + dl, w * 1.25, w * 1.3); ctx.fill(); ctx.stroke();
-      ctx.fillStyle = 'rgba(255,255,255,.9)'; ell(dx - w * .4, q.r * .7 + dl - w * .3, w * .35, w * .45); ctx.fill();
+    const r = q.r, shapes = splatShapes(q, ext), size = Math.ceil(r * 7), cy = size * .4;
+    const drips = q.drips.map(d => ({ ...d, len: Math.min(d.max, Math.max(0, q.t - .12) * r * 1.6 * d.sp) }));
+    // draw the whole splash opaque on its own canvas, then fade it in one piece (no inner outlines show)
+    splatCv.width = splatCv.height = Math.ceil(size * DPR);
+    const c = sctx; c.setTransform(DPR, 0, 0, DPR, size / 2 * DPR, cy * DPR);
+    // every piece is its own path; outlines first, fills on top, so the pieces merge into one splash
+    const all = shapes.slice();
+    for (const d of drips) if (d.len > 1) {
+      all.push(k => k.rect(d.x - d.w, r * .3, d.w * 2, d.len));
+      all.push(k => { k.moveTo(d.x + d.w * 1.3, r * .3 + d.len); k.arc(d.x, r * .3 + d.len, d.w * 1.3, 0, TAU); });
     }
-    ctx.rotate(q.rot); ctx.scale(ins, ins);
-    // droplets flung around the splat
-    for (const d of q.drops) {
-      const x = Math.cos(d.a) * q.r * d.d, y = Math.sin(d.a) * q.r * d.d, rr = q.r * d.r;
-      ctx.fillStyle = 'rgba(150,90,110,.13)'; ell(x + 2, y + 3, rr, rr); ctx.fill();
-      ctx.fillStyle = '#fffaf0'; ell(x, y, rr, rr); ctx.fill(); ctx.strokeStyle = '#efd9bf'; ctx.lineWidth = 1.5; ctx.stroke();
-      ctx.fillStyle = '#fff'; ell(x - rr * .35, y - rr * .35, rr * .3, rr * .3); ctx.fill();
+    const each = (dx, dy, paint) => { c.save(); c.translate(dx, dy); for (const sh of all) { c.beginPath(); sh(c); paint(); } c.restore(); };
+    c.lineJoin = 'round'; c.lineCap = 'round';
+    c.fillStyle = '#e6cfc6'; each(2, 4, () => c.fill());                                     // soft drop shadow
+    c.strokeStyle = '#e8d0b2'; c.lineWidth = 4; each(0, 0, () => c.stroke());                 // rim
+    const g = c.createRadialGradient(-r * .2, -r * .25, r * .05, 0, 0, r * 1.5);
+    g.addColorStop(0, '#ffffff'); g.addColorStop(.4, '#fffbf3'); g.addColorStop(1, '#f6e7d1');
+    c.fillStyle = g; each(0, 0, () => c.fill());                                              // milky body
+    // wet, glossy highlights
+    c.strokeStyle = 'rgba(255,255,255,.95)';
+    c.lineWidth = r * .1; c.beginPath(); c.arc(0, 0, r * .42, Math.PI * 1.05, Math.PI * 1.45); c.stroke();
+    c.lineWidth = r * .06; c.beginPath(); c.arc(0, 0, r * .42, Math.PI * 1.56, Math.PI * 1.66); c.stroke();
+    c.strokeStyle = 'rgba(232,208,178,.55)'; c.lineWidth = r * .06; c.beginPath(); c.arc(0, 0, r * .45, Math.PI * .12, Math.PI * .5); c.stroke();
+    c.fillStyle = 'rgba(255,255,255,.95)';
+    for (const a of q.arms) {
+      const L = r * .35 + a.len * ext, tr = a.w * .55;
+      c.beginPath(); c.arc(Math.cos(a.a) * L - tr * .3, Math.sin(a.a) * L - tr * .3, tr * .28, 0, TAU); c.fill();
+      if (a.drop && ext > .6) { const d = L + a.gap * ext + a.drop; c.beginPath(); c.arc(Math.cos(a.a) * d - a.drop * .3, Math.sin(a.a) * d - a.drop * .3, a.drop * .3, 0, TAU); c.fill(); }
     }
-    // the splat: soft shadow, creamy body, inner sheen and glossy highlights
-    // a round blob plus overlapping round bumps; outlines first, fills on top, so they merge into one shape
-    const circles = [{ x: 0, y: 0, r: q.r * .8 }, ...q.bumps.map(b => ({ x: Math.cos(b.a) * q.r * b.d, y: Math.sin(b.a) * q.r * b.d, r: q.r * b.r }))];
-    ctx.fillStyle = 'rgba(150,90,110,.15)';
-    for (const c of circles) { ell(c.x + 3, c.y + 5, c.r, c.r); ctx.fill(); }
-    ctx.strokeStyle = '#efd9bf'; ctx.lineWidth = 5;
-    for (const c of circles) { ell(c.x, c.y, c.r, c.r); ctx.stroke(); }
-    const cg = ctx.createRadialGradient(-q.r * .25, -q.r * .3, q.r * .1, 0, 0, q.r * 1.15);
-    cg.addColorStop(0, '#ffffff'); cg.addColorStop(.6, '#fffaf0'); cg.addColorStop(1, '#fbeedb');
-    ctx.fillStyle = cg;
-    for (const c of circles) { ell(c.x, c.y, c.r, c.r); ctx.fill(); }
-    ctx.restore();
-    ctx.save(); ctx.globalAlpha = fade; ctx.translate(q.x, q.y + slide); ctx.scale(ins, ins);
-    ctx.strokeStyle = 'rgba(255,255,255,.95)'; ctx.lineWidth = q.r * .1; ctx.lineCap = 'round';
-    ctx.beginPath(); ctx.arc(0, 0, q.r * .66, Math.PI * 1.08, Math.PI * 1.42); ctx.stroke();
-    ctx.fillStyle = 'rgba(255,255,255,.95)'; ell(-q.r * .1, -q.r * .58, q.r * .07, q.r * .07); ctx.fill();
-    ctx.strokeStyle = 'rgba(239,217,191,.6)'; ctx.lineWidth = q.r * .06;
-    ctx.beginPath(); ctx.arc(0, 0, q.r * .7, Math.PI * .1, Math.PI * .45); ctx.stroke();
-    ctx.restore();
+    c.strokeStyle = 'rgba(255,255,255,.9)';
+    for (const d of drips) if (d.len > 4) { c.lineWidth = d.w * .45; c.beginPath(); c.moveTo(d.x - d.w * .4, r * .38); c.lineTo(d.x - d.w * .4, r * .3 + d.len); c.stroke(); }
+    ctx.globalAlpha = fade * .94;
+    ctx.drawImage(splatCv, q.x - size / 2, q.y - cy, size, size);
+    ctx.globalAlpha = 1;
   }
 }
 
