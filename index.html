@@ -63,7 +63,6 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:
 .pbtn:active{transform:translateY(2px) scale(.96)}
 .pbtn[hidden],.tip[hidden]{display:none}
 .tip{font-size:13px;font-weight:500;opacity:.75}
-#stickerN{opacity:.6;font-weight:500}
 #who.warn{background:#ffe1e1;color:#d4405f;animation:bump .5s ease infinite}
 @keyframes breathe{50%{transform:scale(1.06)}}
 #ver{position:absolute;right:calc(env(safe-area-inset-right) + 12px);bottom:calc(env(safe-area-inset-bottom) + 8px);font-size:11px;font-weight:500;opacity:.45}
@@ -72,23 +71,7 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:
 #win{background:linear-gradient(rgba(255,220,230,0) 40%,rgba(255,220,230,.5));justify-content:flex-end;padding-bottom:calc(env(safe-area-inset-bottom) + 28px)}
 .card{background:var(--cream);border-radius:30px;padding:20px 24px 26px;width:min(330px,88vw);box-shadow:var(--shadow);transform:scale(.6);opacity:0;transition:transform .5s cubic-bezier(.3,1.7,.5,1),opacity .25s}
 .screen:not(.hide) .card{transform:scale(1);opacity:1}
-#book,#rushOver{background:rgba(255,220,230,.55)}
-.bookcard{width:min(370px,92vw);max-height:calc(100% - 20px);overflow:auto}
-.pages{display:flex;align-items:center;justify-content:center;gap:14px;margin:10px 0 6px}
-#grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:6px 0 10px;position:relative}
-.stk{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:13px;font-weight:600}
-.stk img{width:100%;max-width:92px;aspect-ratio:1;border-radius:50%;border:4px solid #fff;box-shadow:0 3px 0 rgba(150,80,110,.15);background:#fff}
-.stk.locked img{filter:brightness(0) opacity(.12)}
-.stk.locked span{opacity:.4}
-.stk i{font-style:normal;font-size:11px;opacity:.6;font-weight:500}
-.lockmsg{position:absolute;inset:0;display:grid;place-items:center;text-align:center;font-weight:600;font-size:15px;padding:20px;background:rgba(255,250,243,.75);border-radius:16px}
-#unlocks{font-size:13px;line-height:1.6;margin-bottom:14px;opacity:.85}
-#newSticker{display:flex;align-items:center;gap:12px;justify-content:center;margin:-2px 0 14px;text-align:left}
-#newSticker[hidden]{display:none}
-#newSticker img{width:62px;height:62px;border-radius:50%;border:4px solid #fff;box-shadow:0 3px 0 rgba(150,80,110,.15);animation:stickIn .6s cubic-bezier(.3,1.8,.5,1) both}
-#newSticker b{display:block;color:var(--pink);font-size:17px}
-#newSticker small{display:block;font-size:13px;opacity:.75}
-@keyframes stickIn{from{transform:scale(0) rotate(-40deg)}to{transform:scale(1) rotate(-6deg)}}
+#rushOver{background:rgba(255,220,230,.55)}
 .card h2{margin:0;font-size:30px;color:var(--pink);line-height:1.1}
 .card p{margin:4px 0 0;font-size:16px;font-weight:500;opacity:.8}
 .row{display:flex;align-items:center;justify-content:center;gap:14px;margin:6px 0 12px}
@@ -125,28 +108,12 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:
     <button class="btn" id="play">Open the spa ✨</button>
     <div class="menu2">
       <button class="pbtn" id="rushBtn">⏱ Rush hour</button>
-      <button class="pbtn" id="bookBtn">📖 Stickers <span id="stickerN"></span></button>
     </div>
     <button class="pbtn" id="installBtn" hidden>📲 Add to home screen</button>
     <div class="howto">Use <b>two fingers</b>: pinch a bump to <b>pop</b> it, or pinch a hair and <b>pull</b> 🔊 sound on!</div>
     <div class="tip" id="iosTip" hidden>Play it like an app: tap <b>Share</b>, then <b>Add to Home Screen</b></div>
   </div>
-  <div id="ver">v3</div>
-</div>
-
-<div id="book" class="screen hide">
-  <div class="card bookcard">
-    <h2>Sticker book</h2>
-    <p id="bookSub">Make every client glow to collect their sticker</p>
-    <div class="pages">
-      <button class="ib" id="pgPrev" aria-label="Previous page">‹</button>
-      <b id="pageName">Page 1</b>
-      <button class="ib" id="pgNext" aria-label="Next page">›</button>
-    </div>
-    <div id="grid"></div>
-    <div id="unlocks"></div>
-    <button class="btn alt" id="bookClose">Done</button>
-  </div>
+  <div id="ver">v4</div>
 </div>
 
 <div id="rushOver" class="screen hide">
@@ -168,7 +135,6 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:
     <p id="winMsg">Mochi feels brand new</p>
     <div class="row"><div class="stars" id="stars"><span>★</span><span>★</span><span>★</span></div>
     <div class="big" id="winScore">+0</div></div>
-    <div id="newSticker"><img id="stickerImg" alt=""><div><b id="stickerTxt">New sticker!</b><small id="unlockTxt"></small></div></div>
     <button class="btn alt" id="next">Next client →</button>
   </div>
 </div>
@@ -196,7 +162,7 @@ const easeInBack = t => 2.7 * t * t * t - 1.7 * t * t;
 /* ---------- save ---------- */
 const SAVE_KEY = 'popPluck.v1';
 const loaded = (() => { try { return JSON.parse(localStorage.getItem(SAVE_KEY)) || {}; } catch (e) { return {}; } })();
-const save = Object.assign({ level: 1, total: 0, tutPop: false, tutPull: false, sfx: true, music: true, stickers: {}, rushBest: 0, tutDone: false }, loaded);
+const save = Object.assign({ level: 1, total: 0, tutPop: false, tutPull: false, sfx: true, music: true, rushBest: 0, tutDone: false }, loaded);
 if (!('tutDone' in loaded) && save.level > 1) save.tutDone = true; // players from before the tutorial existed
 const persist = () => { try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch (e) {} };
 
@@ -468,23 +434,7 @@ const CLIENTS = [
   { name: 'Kiki', skin: '#efe6ff', skin2: '#ddd0ff', line: '#a997d6', blush: '#ffafd0', ears: 'cat', earIn: '#ffc6df', towel: '#fff0bd', towelLine: '#e3c56f', hair: '#5d4670', bg: ['#fbf4ff', '#ecdfff'], mouth: 'cat' },
   { name: 'Pip', skin: '#e5f4d4', skin2: '#cfe8b6', line: '#97bf7b', blush: '#ffab9f', ears: 'mouse', earIn: '#ffcfcf', towel: '#ffdcc6', towelLine: '#eca783', hair: '#4f5a33', bg: ['#fffbea', '#fcebc9'], mouth: 'smile' },
   { name: 'Bao', skin: '#fffaf1', skin2: '#f4e9d6', line: '#d6bd99', blush: '#ffb3b3', ears: 'none', earIn: '#ffd0d0', towel: '#ffe1ec', towelLine: '#eea9c1', hair: '#5e4337', bg: ['#fff6f0', '#ffe3d6'], mouth: 'smile' },
-  // page 2: unlocked by collecting every sticker on page 1
-  { name: 'Pickle', skin: '#d3efc0', skin2: '#b6e09d', line: '#80b566', blush: '#ffa7a0', ears: 'frog', earIn: '#ebf9e2', towel: '#ffd9e6', towelLine: '#efa3bd', hair: '#3f5a2f', bg: ['#f2fbea', '#dcf2cf'], mouth: 'smile' },
-  { name: 'Bamboo', skin: '#ffffff', skin2: '#efeaf0', line: '#b9adbb', blush: '#ffb3c4', ears: 'round', earCol: '#5d4b5b', earIn: '#5d4b5b', patches: '#a5939f', towel: '#d6f0e4', towelLine: '#8ccfae', hair: '#4a3a48', bg: ['#f4fbf6', '#ddf1e6'], mouth: 'cat' },
-  { name: 'Nimbus', skin: '#eef6ff', skin2: '#d9e8fb', line: '#9db8de', blush: '#ffb8d2', ears: 'puffs', puffCol: '#f9fcff', towel: '#fff1c9', towelLine: '#e6c776', hair: '#5c6b8c', bg: ['#f0f7ff', '#d9e9ff'], mouth: 'smile' },
-  { name: 'Sunny', skin: '#fff1b8', skin2: '#ffe08a', line: '#e0b54f', blush: '#ffab9a', ears: 'tuft', earIn: '#ffcf5c', towel: '#d9ecff', towelLine: '#97bde6', hair: '#7a5a2b', bg: ['#fffbe6', '#fff0bd'], mouth: 'cat' },
-  { name: 'Mallow', skin: '#ffdde6', skin2: '#ffc4d3', line: '#e597ad', blush: '#ff8fae', ears: 'pig', earIn: '#ffb3c6', towel: '#e9e0ff', towelLine: '#b6a4e6', hair: '#6b4250', bg: ['#fff2f6', '#ffdce7'], mouth: 'smile' },
-  { name: 'Taro', skin: '#f1e6ff', skin2: '#e1d1fb', line: '#b29ad8', blush: '#ffb0cc', ears: 'lamb', puffCol: '#fffaf2', earIn: '#ffd3df', towel: '#ffe6cf', towelLine: '#eab184', hair: '#5b4670', bg: ['#fbf6ff', '#efe4ff'], mouth: 'cat' },
 ];
-const PATTERNS = [
-  { id: 'dots', need: 3, name: 'dotty towels' },
-  { id: 'stripes', need: 6, name: 'stripy towels' },
-  { id: 'hearts', need: 9, name: 'heart towels' },
-  { id: 'stars', need: 12, name: 'starry towels' },
-];
-const stickerCount = () => Object.keys(save.stickers).length;
-const page2Open = () => CLIENTS.slice(0, 6).every(c => save.stickers[c.name]);
-const unlockedClients = () => CLIENTS.slice(0, page2Open() ? 12 : 6);
 const SAY_HI = ['Hi! I\'m {n}~', 'Hello! {n} here!', 'Spa day! I\'m {n}', 'Hiya, I\'m {n}!'];
 const SAY_POP = ['hehe!', 'ooh!', 'ahh~', 'so fresh!', 'eep!', 'nice!', 'wheee'];
 const SAY_PLUCK = ['yip!', 'ouchie!', 'eek!', 'wow!', 'boop!'];
@@ -512,7 +462,7 @@ const look = { x: 0, y: 0 };
 let scoreTarget = { x: 0, y: 0 };
 const pointers = new Map();
 let bgCanvas = null;
-let mode = 'relax', rush = null, finish = null, tutorial = null, towelPattern = 'plain', squeakT = 0;
+let mode = 'relax', rush = null, finish = null, tutorial = null, squeakT = 0;
 const creamCv = document.createElement('canvas'), cctx = creamCv.getContext('2d');
 let hx = n => head.cx + n * head.r, hy = n => head.cy + n * head.r;
 
@@ -572,9 +522,7 @@ function roundRect(c, x, y, w, h, r) { c.beginPath(); c.moveTo(x + r, y); c.arcT
    ============================================================ */
 const EYE_L = { x: -.36, y: -.04 }, EYE_R = { x: .36, y: -.04 }, MOUTH = { x: 0, y: .27 };
 function genLevel(n, opts = {}) {
-  const pool = unlockedClients();
-  client = opts.client || (opts.rush ? pick(pool.filter(c => c !== client)) : pool[(n - 1) % pool.length]);
-  towelPattern = pick(['plain', 'plain', ...PATTERNS.filter(p => stickerCount() >= p.need).map(p => p.id)]);
+  client = opts.client || (opts.rush ? pick(CLIENTS.filter(c => c !== client)) : CLIENTS[(n - 1) % CLIENTS.length]);
   pimples = []; hairs = []; finish = null; tutorial = null;
   if (!opts.rush && !save.tutDone) { buildTutorial(); resetLevelState(); return; }
   const np = Math.min(3 + n, 8), nh = Math.min(1 + Math.ceil(n / 2), 5) - (n >= 3 ? 1 : 0) - (n >= 6 ? 1 : 0);
@@ -1066,18 +1014,6 @@ function doWin() {
   ring(hx(0), hy(0), head.r * 2.2, '#fff');
   say('I feel so glowy~ ✨', 3);
   const stars = slips <= 1 ? 3 : slips <= 3 ? 2 : 1;
-  // sticker for this client, plus anything it unlocks
-  const isNew = !save.stickers[client.name], hadPage2 = page2Open();
-  save.stickers[client.name] = (save.stickers[client.name] || 0) + 1;
-  const unlocks = [];
-  if (isNew) {
-    const pat = PATTERNS.find(pt => pt.need === stickerCount());
-    if (!hadPage2 && page2Open()) unlocks.push('6 new clients');
-    if (pat) unlocks.push(pat.name);
-  }
-  $('#stickerImg').src = portraitURL(client);
-  $('#stickerTxt').textContent = isNew ? 'New sticker!' : `Sticker ×${save.stickers[client.name]}`;
-  $('#unlockTxt').textContent = unlocks.length ? `Unlocked: ${unlocks.join(' + ')}!` : isNew ? `${stickerCount()} of ${CLIENTS.length} collected` : '';
   if (tutorial) { save.tutDone = true; tutorial = null; }
   save.level++; persist();
   $('#winMsg').textContent = `${client.name} feels brand new!`;
@@ -1142,41 +1078,7 @@ function wipeSplats() {
     }
   }
 }
-/* ---------- sticker portraits: draw a client into a little canvas ---------- */
-const portraitCache = {};
-function renderPortrait(c, px) {
-  const can = document.createElement('canvas'); can.width = can.height = px;
-  const keep = { ctx, client, pimples, hairs, winGlow, expr, S, hx, hy, blinkP, finish, towelPattern, lx: look.x, ly: look.y, wx: wob.x, cx: head.cx, cy: head.cy, r: head.r };
-  try {
-    ctx = can.getContext('2d');
-    head.cx = px / 2; head.cy = px * .62; head.r = px * .29; S = head.r / 170;
-    hx = n => head.cx + n * head.r; hy = n => head.cy + n * head.r;
-    client = c; pimples = []; hairs = []; winGlow = 0; expr = 'happy'; blinkP = 0; finish = null; towelPattern = 'plain'; look.x = 0; look.y = .2; wob.x = 0;
-    const g = ctx.createLinearGradient(0, 0, 0, px); g.addColorStop(0, c.bg[0]); g.addColorStop(1, c.bg[1]);
-    ctx.fillStyle = g; ctx.fillRect(0, 0, px, px);
-    drawCharacter();
-  } finally {
-    ({ ctx, client, pimples, hairs, winGlow, expr, S, hx, hy, blinkP, finish, towelPattern } = keep);
-    look.x = keep.lx; look.y = keep.ly; wob.x = keep.wx; head.cx = keep.cx; head.cy = keep.cy; head.r = keep.r;
-  }
-  return can;
-}
-function portraitURL(c) { return portraitCache[c.name] || (portraitCache[c.name] = renderPortrait(c, Math.round(110 * Math.min(DPR, 2))).toDataURL()); }
-
-let bookPage = 0;
-function renderBook() {
-  const page = CLIENTS.slice(bookPage * 6, bookPage * 6 + 6), locked = bookPage === 1 && !page2Open();
-  $('#pageName').textContent = bookPage ? 'Page 2 · new friends' : 'Page 1 · regulars';
-  $('#grid').innerHTML = page.map(c => {
-    const n = save.stickers[c.name] || 0;
-    return `<div class="stk ${n ? '' : 'locked'}"><img src="${portraitURL(c)}" alt="${n ? c.name : 'Not collected yet'}"><span>${n ? c.name : '???'}</span><i>${n > 1 ? 'visited ' + n + ' times' : n ? 'visited once' : ''}</i></div>`;
-  }).join('') + (locked ? '<div class="lockmsg">🔒 Collect all 6 stickers on page 1 to meet new friends</div>' : '');
-  $('#unlocks').innerHTML = '<b>Towel patterns</b><br>' + PATTERNS.map(pt => `${stickerCount() >= pt.need ? '✅' : '🔒'} ${pt.name} <span style="opacity:.6">(${pt.need} stickers)</span>`).join('<br>');
-  $('#pgPrev').style.visibility = bookPage ? 'visible' : 'hidden';
-  $('#pgNext').style.visibility = bookPage ? 'hidden' : 'visible';
-}
-function updateTitle() { $('#stickerN').textContent = `${stickerCount()}/${CLIENTS.length}`; }
-function hideScreens() { ['#win', '#book', '#rushOver'].forEach(q => $(q).classList.add('hide')); }
+function hideScreens() { ['#win', '#rushOver'].forEach(q => $(q).classList.add('hide')); }
 
 /* ---------- rush hour: as many clients as you can before the clock runs out ---------- */
 function startRush() {
@@ -1217,7 +1119,7 @@ function goHome() {
   $('#hud').classList.add('off'); $('#title').classList.remove('hide');
   if (mode === 'rush' || ['win', 'finish', 'trans', 'rushover'].includes(state)) { mode = 'relax'; rush = null; genLevel(save.level); buildBg(); }
   if (tutorial) tutorial.i = -1;
-  offX = 0; enterT = 1; exitT = -1; state = 'title'; updateTitle(); updateHud();
+  offX = 0; enterT = 1; exitT = -1; state = 'title'; updateHud();
 }
 function shownScoreValue() { return mode === 'rush' && rush ? rush.score : save.total; }
 function refreshScoreTarget() { setTimeout(() => { const r = $('#score').getBoundingClientRect(); scoreTarget = { x: r.left + r.width / 2, y: r.top + r.height / 2 }; }, 600); }
@@ -1482,7 +1384,6 @@ function drawCharacter() {
   // --- towel
   drawTowel(c, lw);
   if (c.ears === 'sprout') drawSprout(c, lw);
-  if (c.ears === 'tuft') drawTuft(c, lw);
 
   // --- sweat drop
   if (expr === 'ouch' || expr === 'wince') {
@@ -1520,31 +1421,6 @@ function drawEars(c, lw) {
     ell(hx(s * .8), hy(-.95), r * .27, r * .27); ctx.fillStyle = c.skin; ctx.fill(); ctx.stroke();
     ell(hx(s * .82), hy(-.97), r * .15, r * .15); ctx.fillStyle = c.earIn; ctx.fill();
   });
-  if (c.ears === 'frog') ear(s => {
-    ell(hx(s * .6), hy(-1.16), r * .34, r * .32); ctx.fillStyle = c.skin; ctx.fill(); ctx.stroke();
-    ell(hx(s * .6), hy(-1.24), r * .19, r * .15); ctx.fillStyle = c.earIn; ctx.fill();
-  });
-  if (c.ears === 'round') ear(s => {
-    ell(hx(s * .8), hy(-.95), r * .27, r * .27); ctx.fillStyle = c.earCol; ctx.fill(); ctx.strokeStyle = c.earCol; ctx.stroke(); ctx.strokeStyle = c.line;
-  });
-  if (c.ears === 'pig') ear(s => {
-    ctx.beginPath(); ctx.moveTo(hx(s * .45), hy(-.95)); ctx.quadraticCurveTo(hx(s * .9), hy(-1.35), hx(s * 1.12), hy(-1.0)); ctx.quadraticCurveTo(hx(s * .98), hy(-.7), hx(s * .85), hy(-.55)); ctx.closePath();
-    ctx.fillStyle = c.skin; ctx.fill(); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(hx(s * .62), hy(-.92)); ctx.quadraticCurveTo(hx(s * .92), hy(-1.2), hx(s * 1.02), hy(-.98)); ctx.quadraticCurveTo(hx(s * .93), hy(-.8), hx(s * .85), hy(-.7)); ctx.closePath(); ctx.fillStyle = c.earIn; ctx.fill();
-  });
-  if (c.ears === 'puffs' || c.ears === 'lamb') {
-    const n = c.ears === 'lamb' ? 9 : 11, a0 = c.ears === 'lamb' ? Math.PI * 1.05 : Math.PI * .8, a1 = c.ears === 'lamb' ? Math.PI * 1.95 : Math.PI * 2.2;
-    for (let i = 0; i < n; i++) {
-      const a = lerp(a0, a1, i / (n - 1)), pr = r * (.24 + (i % 2) * .05);
-      ell(hx(Math.cos(a) * 1.02), hy(Math.sin(a) * .98), pr, pr); ctx.fillStyle = c.puffCol; ctx.fill(); ctx.stroke();
-    }
-    for (let i = 0; i < n; i++) { const a = lerp(a0, a1, i / (n - 1)), pr = r * (.24 + (i % 2) * .05) - 2; ell(hx(Math.cos(a) * 1.02), hy(Math.sin(a) * .98), pr, pr); ctx.fillStyle = c.puffCol; ctx.fill(); }
-    if (c.ears === 'lamb') ear(s => {
-      ctx.save(); ctx.translate(hx(s * 1.02), hy(-.2)); ctx.rotate(s * .5);
-      ell(0, 0, r * .3, r * .14); ctx.fillStyle = c.skin; ctx.fill(); ctx.stroke(); ell(0, 0, r * .18, r * .07); ctx.fillStyle = c.earIn; ctx.fill();
-      ctx.restore();
-    });
-  }
   if (c.ears === 'mouse') ear(s => {
     ell(hx(s * 1.02), hy(-.62), r * .38, r * .38); ctx.fillStyle = c.skin; ctx.fill(); ctx.stroke();
     ell(hx(s * 1.04), hy(-.62), r * .24, r * .24); ctx.fillStyle = c.earIn; ctx.fill();
@@ -1559,13 +1435,6 @@ function drawSprout(c, lw) {
   ctx.restore();
 }
 
-function drawTuft(c, lw) {
-  const r = head.r;
-  ctx.save(); ctx.translate(hx(.05), hy(-1.18)); ctx.rotate(Math.sin(time * 3) * .1 + wob.x * .1);
-  ctx.strokeStyle = c.earIn; ctx.lineWidth = lw * 1.6; ctx.lineCap = 'round';
-  for (let i = -1; i <= 1; i++) { ctx.beginPath(); ctx.moveTo(0, 0); ctx.quadraticCurveTo(i * r * .14, -r * .22, i * r * .2 + r * .06, -r * .16); ctx.stroke(); }
-  ctx.restore();
-}
 function drawTowel(c, lw) {
   ctx.beginPath();
   ctx.moveTo(hx(-1.05), hy(-.3));
@@ -1580,21 +1449,6 @@ function drawTowel(c, lw) {
   ctx.strokeStyle = hexA(c.towelLine, .7); ctx.lineWidth = lw * .7;
   for (let i = 0; i < 4; i++) {
     ctx.beginPath(); ctx.moveTo(hx(-.9 + i * .4), hy(-.52)); ctx.quadraticCurveTo(hx(-.6 + i * .42), hy(-.9), hx(-.2 + i * .42), hy(-1.15)); ctx.stroke();
-  }
-  if (towelPattern !== 'plain') {
-    const step = head.r * .24;
-    ctx.fillStyle = 'rgba(255,255,255,.75)'; ctx.strokeStyle = 'rgba(255,255,255,.6)';
-    if (towelPattern === 'stripes') {
-      ctx.lineWidth = step * .28;
-      for (let x = hx(-1.6); x < hx(1.4); x += step) { ctx.beginPath(); ctx.moveTo(x, hy(-.3)); ctx.lineTo(x + head.r * .6, hy(-1.3)); ctx.stroke(); }
-    } else {
-      let row = 0;
-      for (let y = hy(-1.28); y < hy(-.3); y += step * .85, row++) for (let x = hx(-1.15) + (row % 2) * step / 2; x < hx(1.15); x += step) {
-        if (towelPattern === 'dots') { ell(x, y, step * .13, step * .13); ctx.fill(); }
-        else if (towelPattern === 'hearts') { heartPath(ctx, x, y, step * .2); ctx.fill(); }
-        else { starPath(ctx, x, y, step * .19); ctx.fill(); }
-      }
-    }
   }
   ctx.fillStyle = 'rgba(255,255,255,.45)'; ell(hx(-.45), hy(-.95), head.r * .28, head.r * .1, -.4); ctx.fill();
   ctx.restore();
@@ -1613,7 +1467,6 @@ function drawEyes(c) {
   const lx = look.x * er * .35, ly = look.y * er * .3;
   for (const s of [-1, 1]) {
     const ex = hx(s * .36), ey = hy(-.04);
-    if (c.patches) { ctx.fillStyle = c.patches; ell(ex + s * er * .15, ey + er * .15, er * 1.45, er * 1.2, -s * .45); ctx.fill(); }
     ctx.lineWidth = Math.max(3, er * .32); ctx.strokeStyle = ink; ctx.fillStyle = ink;
     if (expr === 'wince' || expr === 'ouch') {
       ctx.beginPath(); ctx.moveTo(ex - s * er * .6, ey - er * .55); ctx.lineTo(ex + s * er * .45, ey); ctx.lineTo(ex - s * er * .6, ey + er * .55); ctx.stroke();
@@ -2136,10 +1989,6 @@ $('#bHome').addEventListener('click', goHome);
 $('#rushBtn').addEventListener('click', startRush);
 $('#rushAgain').addEventListener('click', startRush);
 $('#rushHome').addEventListener('click', goHome);
-$('#bookBtn').addEventListener('click', () => { SFX.init(); SFX.click(); bookPage = 0; renderBook(); $('#book').classList.remove('hide'); });
-$('#bookClose').addEventListener('click', () => { SFX.click(); $('#book').classList.add('hide'); updateTitle(); });
-$('#pgPrev').addEventListener('click', () => { SFX.click(); bookPage = 0; renderBook(); });
-$('#pgNext').addEventListener('click', () => { SFX.click(); bookPage = 1; renderBook(); });
 
 /* ---------- add to home screen ---------- */
 let deferredInstall = null;
@@ -2157,7 +2006,7 @@ window.addEventListener('resize', resize);
 
 // boot: show the current client idle behind the title
 genLevel(save.level);
-resize(); setIcons(); updateHud(); updateTitle();
+resize(); setIcons(); updateHud();
 requestAnimationFrame(frame);
 if (document.fonts && document.fonts.load) document.fonts.load('700 20px Fredoka').catch(() => {});
 </script>
