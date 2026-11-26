@@ -113,7 +113,7 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:
     <div class="howto">Use <b>two fingers</b>: pinch a bump to <b>pop</b> it, or pinch a hair and <b>pull</b> 🔊 sound on!</div>
     <div class="tip" id="iosTip" hidden>Play it like an app: tap <b>Share</b>, then <b>Add to Home Screen</b></div>
   </div>
-  <div id="ver">v4</div>
+  <div id="ver">v5</div>
 </div>
 
 <div id="rushOver" class="screen hide">
@@ -768,14 +768,14 @@ function mouseStart(x, y) {
 
 /* ---------- action control ---------- */
 function startSqueeze(p, ids, d, axis, src) {
-  action = { type: 'squeeze', p, ids, d0: Math.max(d, 70 * Math.max(S, .8)), src, t: 0, loop: SFX.loop('squeeze') };
-  action.dmin = Math.max(22, action.d0 * .42);
+  action = { type: 'squeeze', p, ids, d0: Math.max(d, 150 * Math.max(S, .8)), src, t: 0, loop: SFX.loop('squeeze') };
+  action.dmin = Math.max(85, action.d0 * .52);
   p.axis = axis; ids.forEach(id => { const q = pointers.get(id); if (q) q.used = true; });
   setExpr('nervous', 99);
 }
 function startHair(h, ids, mx, my, d, src) {
   const F = hairFoll(h);
-  const group = h.cluster ? hairs.filter(o => o.cluster === h.cluster && !o.pulled && distToHair(o, mx, my) < 55 * Math.max(S, .8)) : [h];
+  const group = h.cluster ? hairs.filter(o => o.cluster === h.cluster && !o.pulled && distToHair(o, mx, my) < 75 * Math.max(S, .8)) : [h];
   if (!group.includes(h)) group.unshift(h);
   action = { type: 'hair', h, group, ids, d0: d, src, startDist: dist(mx, my, F.x, F.y), loop: SFX.loop('hair'), vx: 0, vy: 0, px: mx, py: my, tickN: 0 };
   group.forEach((o, i) => { o.grip = { x: mx, y: my }; o.tension = 0; o.gOff = (i - (group.length - 1) / 2) * 7; });
@@ -818,14 +818,14 @@ function updateAction(dt) {
     let bp = null, bpd = 1e9, bh = null, bhd = 1e9;
     for (const p of pimples) {
       if (p.popped) continue; const P = pimplePos(p), dd = dist(mx, my, P.x, P.y);
-      const reach = Math.max(52, p.size * head.r * 3.4);
+      const reach = Math.max(80, p.size * head.r * 5);
       if (dd < reach && dd < bpd) { bpd = dd; bp = p; }
     }
     for (const h of hairs) {
       if (h.pulled || h.hidden) continue; const dd = distToHair(h, mx, my);
-      if (dd < 46 && dd < bhd) { bhd = dd; bh = h; }
+      if (dd < 75 && dd < bhd) { bhd = dd; bh = h; }
     }
-    if (bh && d < 110 && (!bp || bhd < bpd || d < 60)) startHair(bh, [a.id, b.id], mx, my, d, 'touch');
+    if (bh && d < 280 && (!bp || bhd < bpd)) startHair(bh, [a.id, b.id], mx, my, d, 'touch');
     else if (bp) startSqueeze(bp, [a.id, b.id], d, Math.atan2(b.y - a.y, b.x - a.x), 'touch');
     return;
   }
@@ -844,7 +844,7 @@ function updateAction(dt) {
 
   if (action.type === 'squeeze') {
     const p = action.p, P = pimplePos(p);
-    if (dist(mx, my, P.x, P.y) > Math.max(90, p.size * head.r * 6)) { endAction(false); return; }
+    if (dist(mx, my, P.x, P.y) > Math.max(130, p.size * head.r * 8)) { endAction(false); return; }
     let target;
     if (action.src === 'touch') { target = clamp((action.d0 - d) / (action.d0 - action.dmin), 0, 1); p.axis = Math.atan2(pb.y - pa.y, pb.x - pa.x); }
     else target = clamp(action.t * 2.4, 0, 1);
@@ -871,7 +871,7 @@ function updateAction(dt) {
     if (p.hold >= need) popPimple(p);
   } else {
     const h = action.h, F = hairFoll(h);
-    if (action.src === 'touch' && d > Math.max(action.d0 * 1.9, action.d0 + 80)) { endAction(false); return; }
+    if (action.src === 'touch' && d > Math.max(action.d0 * 1.9, action.d0 + 140)) { endAction(false); return; }
     const vx = (mx - action.px) / Math.max(dt, .001), vy = (my - action.py) / Math.max(dt, .001);
     action.vx = lerp(action.vx, vx, .3); action.vy = lerp(action.vy, vy, .3); action.px = mx; action.py = my;
     const pullLen = Math.max(80, head.r * (h.ingrown ? .72 : h.long ? .56 : h.tough ? .62 : .48)) * (1 + .15 * (action.group.length - 1));
@@ -1871,12 +1871,13 @@ function drawHint() {
   ctx.globalAlpha = alpha * (ph > .85 ? (1 - ph) / .15 : 1);
   let f1, f2;
   if (mode === 'pop') {
-    const d = lerp(62, 22, e) * Math.max(S, .8);
+    const d = lerp(95, 50, e) * Math.max(S, .8);
     f1 = { x: target.x - d, y: target.y }; f2 = { x: target.x + d, y: target.y };
   } else {
     const F = hairFoll(target.h), dx = target.x - F.x, dy = target.y - F.y, L = Math.hypot(dx, dy) || 1, ux = dx / L, uy = dy / L;
     const pull = e * 60 * Math.max(S, .8), cx = target.x + ux * pull, cy = target.y + uy * pull;
-    f1 = { x: cx - uy * 16, y: cy + ux * 16 }; f2 = { x: cx + uy * 16, y: cy - ux * 16 };
+    const sp = 48 * Math.max(S, .8);
+    f1 = { x: cx - uy * sp, y: cy + ux * sp }; f2 = { x: cx + uy * sp, y: cy - ux * sp };
   }
   for (const f of [f1, f2]) {
     ctx.fillStyle = 'rgba(255,255,255,.55)'; ell(f.x, f.y, 22, 22); ctx.fill();
