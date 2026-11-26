@@ -271,6 +271,11 @@ const SFX = (() => {
       tone({ f: 900, f2: 160, t: .12, v: .5, when: .03 });
       noise({ t: .05, f: 1800, q: 1.2, v: .3, when: .03 });
     },
+    splat() {
+      noise({ t: .12, type: 'lowpass', f: 900, f2: 250, q: 2, v: .4 });
+      tone({ f: 220, f2: 70, t: .14, v: .35 });
+      tone({ f: 600, f2: 900, t: .05, v: .06, when: .07 });
+    },
     squirt() {
       noise({ t: .18, type: 'lowpass', f: 400, f2: 2400, q: 5, v: .3 });
       tone({ f: 150, f2: 340, t: .13, v: .28 });
@@ -361,7 +366,7 @@ let S = 1;                    // scale: head.r / 170
 let state = 'title';          // title | play | win | trans
 let client = CLIENTS[0];
 let pimples = [], hairs = [];
-let particles = [], texts = [], flyers = [], bubbles = [], squirts = [], dollops = [];
+let particles = [], texts = [], flyers = [], bubbles = [], squirts = [], dollops = [], splats = [];
 let shake = 0, flash = 0, hitstop = 0, time = 0, slowmo = 1;
 let combo = 0, comboT = 0, levelScore = 0, shownScore = save.total;
 let action = null;
@@ -776,6 +781,10 @@ function popPimple(p) {
       squirts.push({ x: P.x + Math.cos(a) * R * .3, y: P.y + Math.sin(a) * R * .3, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 120, trail: [], t: 0, w: R * rand(.55, .68) * (i ? .7 : 1), landed: false });
     }
     burst(P.x, P.y, 7, ['cream'], ['#fffaf0'], 260);
+    // ...and a splat or two right on the camera lens
+    const nSplat = p.kind === 'big' ? (Math.random() < .6 ? 2 : 1) : 1;
+    for (let i = 0; i < nSplat; i++) splatScreen(P.x + rand(-90, 90), P.y + rand(-160, 30), i * .09);
+    setTimeout(() => { SFX.splat(); buzz([10, 15, 30]); }, 120);
     setTimeout(() => SFX.squirt(), 20);
   }
   const word = combo >= 3 ? `Combo x${combo}!` : p.kind === 'gold' ? 'Golden!' : p.kind === 'ingrown' ? 'Pop!' : big ? 'BIG POP!' : pick(WORD_POP);
@@ -941,6 +950,7 @@ function update(dt) {
       if (!q.trail.length) squirts.splice(i, 1);
     }
   }
+  for (let i = splats.length - 1; i >= 0; i--) { const q = splats[i]; q.t += dt; if (q.t > q.life) splats.splice(i, 1); }
   for (let i = dollops.length - 1; i >= 0; i--) { const d = dollops[i]; d.t += dt; if (d.t > d.life) { burst(d.x, d.y, 3, ['sparkle'], ['#fff', '#ffe17a'], 50); dollops.splice(i, 1); } }
   for (let i = texts.length - 1; i >= 0; i--) { const t = texts[i]; t.t += dt; t.y -= dt * 34; if (t.t > t.life) texts.splice(i, 1); }
   // flyers
@@ -1022,6 +1032,7 @@ function draw() {
   drawSpeech();
   ctx.restore();
   if (flash > .01) { ctx.fillStyle = `rgba(255,255,255,${flash})`; ctx.fillRect(0, 0, W, H); }
+  drawSplats();
 }
 
 function drawCharacter() {
@@ -1391,6 +1402,72 @@ function drawIngrownPull(h, hl, rootR) {
   const extra = r * .05;
   for (let i = 1; i <= 3; i++) { const s = i / 3; out.push({ x: G.x + ux * extra * s + px * Math.sin(s * 3 + time * 4) * extra * .5, y: G.y + uy * extra * s + py * Math.sin(s * 3 + time * 4) * extra * .5 }); }
   ctx.strokeStyle = h.col; ctx.lineWidth = hl * 1.1; strokePts(out);
+}
+
+/* ---------- cream splats on the camera lens (screen space, on top of everything) ---------- */
+function splatScreen(x, y, delay) {
+  // soft, rounded outline: a few gentle bulges instead of jagged random points
+  const r = rand(34, 54) * Math.max(Math.min(S, 1.3), .9), n = 28, lobes = [];
+  const k1 = 3 + (Math.random() * 3 | 0), p1 = rand(0, TAU), a1 = rand(.08, .14), p2 = rand(0, TAU);
+  for (let i = 0; i < n; i++) { const a = i / n * TAU; lobes.push(1 + a1 * Math.sin(a * k1 + p1) + .05 * Math.sin(a * (k1 + 2) + p2)); }
+  const drops = [];
+  for (let i = 0, m = 3 + (Math.random() * 4 | 0); i < m; i++) { const a = rand(0, TAU); drops.push({ a, d: rand(1.25, 1.9), r: rand(.07, .17) }); }
+  const bumps = [];
+  for (let i = 0, m = 5 + (Math.random() * 3 | 0); i < m; i++) bumps.push({ a: i / m * TAU + rand(-.3, .3), d: rand(.62, .82), r: rand(.3, .46) });
+  splats.push({ x: clamp(x, r + 12, W - r - 12), y: clamp(y, r + 90, H - r - 30), r, lobes, drops, bumps, rot: rand(0, TAU), t: -delay, life: 1.5 + delay,
+    drip: Math.random() < .7 ? { a: rand(-.35, .35), w: rand(.16, .24), len: rand(.5, .9) } : null });
+}
+function blobPath(c, r, lobes) {
+  const n = lobes.length, pt = i => { const a = i / n * TAU, k = lobes[(i + n) % n]; return { x: Math.cos(a) * r * k, y: Math.sin(a) * r * k }; };
+  c.beginPath();
+  let p0 = pt(0), p1 = pt(1); c.moveTo((p0.x + p1.x) / 2, (p0.y + p1.y) / 2);
+  for (let i = 1; i <= n; i++) { const a = pt(i), b = pt(i + 1); c.quadraticCurveTo(a.x, a.y, (a.x + b.x) / 2, (a.y + b.y) / 2); }
+  c.closePath();
+}
+function drawSplats() {
+  for (const q of splats) {
+    if (q.t < 0) continue;
+    const ins = q.t < .16 ? easeOutElastic(q.t / .16 * .7 + .3) : 1;
+    const fade = clamp((q.life - q.t) / .45, 0, 1);
+    const slide = Math.min(q.t, 1.3) * 9; // the whole splat sags down the glass a little
+    ctx.save(); ctx.globalAlpha = fade; ctx.translate(q.x, q.y + slide);
+    // drip running down
+    if (q.drip) {
+      const dl = q.r * q.drip.len * clamp((q.t - .15) / .9, 0, 1), dx = Math.sin(q.drip.a) * q.r * .6, w = q.r * q.drip.w * ins;
+      ctx.fillStyle = 'rgba(150,90,110,.13)'; ctx.beginPath(); ctx.roundRect ? ctx.roundRect(dx - w + 3, 4, w * 2, q.r * .7 + dl, w) : ctx.rect(dx - w + 3, 4, w * 2, q.r * .7 + dl); ctx.fill();
+      ctx.fillStyle = '#fffaf0'; ctx.strokeStyle = '#efd9bf'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.roundRect ? ctx.roundRect(dx - w, 0, w * 2, q.r * .7 + dl, w) : ctx.rect(dx - w, 0, w * 2, q.r * .7 + dl); ctx.fill(); ctx.stroke();
+      ell(dx, q.r * .7 + dl, w * 1.25, w * 1.3); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = 'rgba(255,255,255,.9)'; ell(dx - w * .4, q.r * .7 + dl - w * .3, w * .35, w * .45); ctx.fill();
+    }
+    ctx.rotate(q.rot); ctx.scale(ins, ins);
+    // droplets flung around the splat
+    for (const d of q.drops) {
+      const x = Math.cos(d.a) * q.r * d.d, y = Math.sin(d.a) * q.r * d.d, rr = q.r * d.r;
+      ctx.fillStyle = 'rgba(150,90,110,.13)'; ell(x + 2, y + 3, rr, rr); ctx.fill();
+      ctx.fillStyle = '#fffaf0'; ell(x, y, rr, rr); ctx.fill(); ctx.strokeStyle = '#efd9bf'; ctx.lineWidth = 1.5; ctx.stroke();
+      ctx.fillStyle = '#fff'; ell(x - rr * .35, y - rr * .35, rr * .3, rr * .3); ctx.fill();
+    }
+    // the splat: soft shadow, creamy body, inner sheen and glossy highlights
+    // a round blob plus overlapping round bumps; outlines first, fills on top, so they merge into one shape
+    const circles = [{ x: 0, y: 0, r: q.r * .8 }, ...q.bumps.map(b => ({ x: Math.cos(b.a) * q.r * b.d, y: Math.sin(b.a) * q.r * b.d, r: q.r * b.r }))];
+    ctx.fillStyle = 'rgba(150,90,110,.15)';
+    for (const c of circles) { ell(c.x + 3, c.y + 5, c.r, c.r); ctx.fill(); }
+    ctx.strokeStyle = '#efd9bf'; ctx.lineWidth = 5;
+    for (const c of circles) { ell(c.x, c.y, c.r, c.r); ctx.stroke(); }
+    const cg = ctx.createRadialGradient(-q.r * .25, -q.r * .3, q.r * .1, 0, 0, q.r * 1.15);
+    cg.addColorStop(0, '#ffffff'); cg.addColorStop(.6, '#fffaf0'); cg.addColorStop(1, '#fbeedb');
+    ctx.fillStyle = cg;
+    for (const c of circles) { ell(c.x, c.y, c.r, c.r); ctx.fill(); }
+    ctx.restore();
+    ctx.save(); ctx.globalAlpha = fade; ctx.translate(q.x, q.y + slide); ctx.scale(ins, ins);
+    ctx.strokeStyle = 'rgba(255,255,255,.95)'; ctx.lineWidth = q.r * .1; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.arc(0, 0, q.r * .66, Math.PI * 1.08, Math.PI * 1.42); ctx.stroke();
+    ctx.fillStyle = 'rgba(255,255,255,.95)'; ell(-q.r * .1, -q.r * .58, q.r * .07, q.r * .07); ctx.fill();
+    ctx.strokeStyle = 'rgba(239,217,191,.6)'; ctx.lineWidth = q.r * .06;
+    ctx.beginPath(); ctx.arc(0, 0, q.r * .7, Math.PI * .1, Math.PI * .45); ctx.stroke();
+    ctx.restore();
+  }
 }
 
 function drawCream() {
