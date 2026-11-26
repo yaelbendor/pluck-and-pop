@@ -270,6 +270,12 @@ const SFX = (() => {
       tone({ f: 900, f2: 160, t: .12, v: .5, when: .03 });
       noise({ t: .05, f: 1800, q: 1.2, v: .3, when: .03 });
     },
+    squirt() {
+      noise({ t: .18, type: 'lowpass', f: 400, f2: 2400, q: 5, v: .3 });
+      tone({ f: 150, f2: 340, t: .13, v: .28 });
+      tone({ f: 340, f2: 160, t: .12, v: .18, when: .1 });
+      tone({ f: 1200, f2: 1700, t: .05, v: .07, when: .2 });
+    },
     boing(v = .3) {
       if (!ok()) return;
       const t0 = ac.currentTime, osc = ac.createOscillator(), lfo = ac.createOscillator(), lg = ac.createGain(), g = ac.createGain();
@@ -354,7 +360,7 @@ let S = 1;                    // scale: head.r / 170
 let state = 'title';          // title | play | win | trans
 let client = CLIENTS[0];
 let pimples = [], hairs = [];
-let particles = [], texts = [], flyers = [], bubbles = [];
+let particles = [], texts = [], flyers = [], bubbles = [], squirts = [], dollops = [];
 let shake = 0, flash = 0, hitstop = 0, time = 0, slowmo = 1;
 let combo = 0, comboT = 0, levelScore = 0, shownScore = save.total;
 let action = null;
@@ -445,7 +451,7 @@ function genLevel(n) {
       if (okSpot(x, y, .2, .06)) {
         taken.push({ x, y, r: .2 });
         const p = newPimple(x, y, .12, 'ingrown'); pimples.push(p);
-        hairs.push({ nx: x, ny: y, ang: rand(0, TAU), len: .25, curl: pick([-1, 1]), ph: rand(0, TAU), wx: 0, wv: 0, tension: 0, pulled: false, grip: null, tough: false, ingrown: true, hidden: true, freed: false, stuckT: 0, pimple: p });
+        hairs.push({ nx: x, ny: y, ang: rand(0, TAU), len: .25, curl: pick([-1, 1]), ph: rand(0, TAU), wx: 0, wv: 0, tension: 0, pulled: false, grip: null, tough: false, ingrown: true, hidden: true, freed: false, stuckT: 0, pimple: p, turns: rand(.9, 1.3), sq: rand(.68, 1), tilt: rand(0, TAU), spread: rand(.6, 1.1), ...hairLook(), hook: false });
         break;
       }
     }
@@ -468,17 +474,36 @@ function genLevel(n) {
       const tx = x + Math.cos(ang) * len, ty = y + Math.sin(ang) * len;
       if (okSpot(x, y, .05, .12) && dist(tx, ty, MOUTH.x, MOUTH.y) > .16 && dist(tx, ty, EYE_L.x, EYE_L.y) > .2 && dist(tx, ty, EYE_R.x, EYE_R.y) > .2) {
         taken.push({ x, y, r: .05 }); taken.push({ x: (x + tx) / 2, y: (y + ty) / 2, r: .06 });
-        hairs.push({ nx: x, ny: y, ang, len, curl: rand(.6, 1.2) * pick([-1, 1]), ph: rand(0, TAU), wx: 0, wv: 0, tension: 0, pulled: false, grip: null, tough: n >= 4 && Math.random() < .3 });
+        hairs.push({ nx: x, ny: y, ang, len, curl: rand(.6, 1.2) * pick([-1, 1]), ph: rand(0, TAU), wx: 0, wv: 0, tension: 0, pulled: false, grip: null, tough: n >= 4 && Math.random() < .3, ...hairLook() });
         break;
       }
     }
   }
   slips = 0; levelScore = 0; clearedT = -1; winGlow = 0; combo = 0;
-  setExpr('idle', 0); flyers = []; texts = [];
+  setExpr('idle', 0); flyers = []; texts = []; squirts = []; dollops = [];
   updateHud();
 }
+const PIMPLE_PALS = [
+  { c0: '#ffc9d4', c1: '#ff9db2', c2: '#ff7f9e', edge: '#f77799', line: '#e8668a', halo: '255,150,175' }, // rose
+  { c0: '#ffd3c6', c1: '#ffa892', c2: '#ff8c75', edge: '#f47e68', line: '#df6a55', halo: '255,160,140' }, // coral
+  { c0: '#ffd2e7', c1: '#ffa6cd', c2: '#fb86b8', edge: '#f076aa', line: '#d96097', halo: '250,150,200' }, // bubblegum
+  { c0: '#ffdccc', c1: '#ffb69e', c2: '#ff9c86', edge: '#f48d79', line: '#e07a68', halo: '255,170,150' }, // peach
+  { c0: '#ffc7cd', c1: '#ff939e', c2: '#f87481', edge: '#ee6977', line: '#d55867', halo: '250,130,145' }, // strawberry
+];
+const ROOT_PALS = [
+  ['#ffffff', '#fff0f3', '#ffc4d2', '#eba3b6'], // pink pearl
+  ['#ffffff', '#fff6ea', '#ffdcbc', '#e6b38f'], // cream
+  ['#ffffff', '#f5f1ff', '#dcd2fb', '#b4a5e4'], // lavender pearl
+  ['#ffffff', '#effbf5', '#c6eddb', '#92cbb0'], // mint pearl
+];
+const hairTint = () => lerpCol(client.hair, pick(['#000000', '#ffffff', '#b5653a', '#8a6f9e']), rand(0, .28));
+function hairLook() {
+  return { waves: rand(1.3, 3.3), amp: rand(.07, .18), thick: rand(.8, 1.35), col: hairTint(), hook: Math.random() < .4, rootK: rand(.85, 1.3), rootPal: pick(ROOT_PALS) };
+}
 function newPimple(nx, ny, size, kind) {
-  return { nx, ny, size, kind, pressure: 0, hold: 0, popped: false, mark: 0, axis: 0, w: 0, wv: 0, ph: rand(0, TAU), tick: 0 };
+  size *= rand(.92, 1.1);
+  const look = { pal: pick(PIMPLE_PALS), ar: rand(.86, 1.15), rot: rand(0, TAU), hx: rand(-.15, .15), hy: rand(-.22, .05), hs: rand(.8, 1.22), twin: Math.random() < .18 ? rand(0, TAU) : null };
+  return { nx, ny, size, kind, look, pressure: 0, hold: 0, popped: false, mark: 0, axis: 0, w: 0, wv: 0, ph: rand(0, TAU), tick: 0 };
 }
 const holdNeed = p => p.kind === 'big' ? .55 : p.kind === 'ingrown' ? .5 : p.kind === 'gold' ? .3 : .06;
 
@@ -488,17 +513,24 @@ function hairFoll(h) { return { x: hx(h.nx), y: hy(h.ny) }; }
 function hairPts(h, n = 10) {
   const F = hairFoll(h), L = h.len * head.r;
   if (h.ingrown) {
-    const R0 = L * .34, a0 = h.ang + h.wx * .4, cx = F.x + Math.cos(a0) * R0, cy = F.y + Math.sin(a0) * R0, pts = [];
+    const R0 = L * .44, a0 = h.ang + h.wx * .4, cx = F.x + Math.cos(a0) * R0, cy = F.y + Math.sin(a0) * R0, pts = [];
+    const ct = Math.cos(h.tilt), st = Math.sin(h.tilt);
+    // loop in its own tilted, squashed frame, anchored so it starts at the follicle
+    const raw = [];
     for (let i = 0; i <= n; i++) {
-      const s = i / n, th = a0 + Math.PI + s * TAU * 1.08 * h.curl, rr = R0 * (1 + s * s * .9);
-      pts.push({ x: cx + Math.cos(th) * rr, y: cy + Math.sin(th) * rr });
+      const s = i / n, th = a0 + Math.PI + s * TAU * h.turns * h.curl, rr = R0 * (1 + s * s * h.spread);
+      const lx = Math.cos(th) * rr, ly = Math.sin(th) * rr;
+      const ux = lx * ct + ly * st, uy = -lx * st + ly * ct; // into tilt frame
+      raw.push({ x: ux, y: uy * h.sq });
     }
+    const ox = raw[0].x, oy = raw[0].y;
+    for (const q of raw) { const qx = q.x - ox, qy = q.y - oy; pts.push({ x: F.x + qx * ct - qy * st, y: F.y + qx * st + qy * ct }); }
     return pts;
   }
   const a = h.ang + Math.sin(time * 1.7 + h.ph) * .05 + h.wx * .5;
   const dx = Math.cos(a), dy = Math.sin(a), px = -dy, py = dx, pts = [];
   for (let i = 0; i <= n; i++) {
-    const s = i / n, off = Math.sin(s * Math.PI * 2.2) * h.curl * L * .13 * (.3 + s);
+    const s = i / n, off = Math.sin(s * Math.PI * h.waves) * h.curl * L * h.amp * (.3 + s) + (h.hook ? h.curl * L * .4 * Math.pow(Math.max(0, s - .7) / .3, 2) : 0);
     pts.push({ x: F.x + dx * L * s + px * off, y: F.y + dy * L * s + py * off });
   }
   return pts;
@@ -729,9 +761,22 @@ function popPimple(p) {
   if (big) ring(P.x, P.y, R * 8, '#ffc2d1', .55);
   const cols = p.kind === 'gold' ? ['#ffd65c', '#fff3b0', '#ffb94a', '#fff'] : ['#ff9fb8', '#ffc2d1', '#fff', '#ffe17a', '#b8e8d0'];
   burst(P.x, P.y, big ? 20 : 11, ['heart', 'star', 'dot', 'sparkle'], cols, big ? 520 : 380);
-  burst(P.x, P.y, big ? 10 : 6, ['foam'], ['#fffaf0'], 220);
+  burst(P.x, P.y, big ? 6 : 6, ['foam'], ['#fffaf0'], 220);
   const nStars = big ? 6 : 3;
   for (let i = 0; i < nStars; i++) flyers.push({ kind: 'star', x: P.x, y: P.y, vx: rand(-260, 260), vy: rand(-520, -220), t: 0, home: .45 + i * .05, val: pts / nStars, rot: rand(0, TAU), col: p.kind === 'gold' ? '#ffd65c' : pick(['#ffd65c', '#ff9fb8', '#9fdcc0']) });
+  if (p.kind === 'big' || p.kind === 'ingrown') {
+    // a little squirt of cream, out the side perpendicular to the pinch
+    // aim the side of the pinch that faces the middle of the face, so the cream lands on skin
+    let nx = -Math.sin(p.axis), ny = Math.cos(p.axis);
+    if (nx * (hx(0) - P.x) + ny * (hy(.15) - P.y) < 0) { nx = -nx; ny = -ny; }
+    const nSq = p.kind === 'big' ? 2 : 1;
+    for (let i = 0; i < nSq; i++) {
+      const sp = rand(200, 260) * Math.max(S, .8), a = Math.atan2(ny, nx) + (i ? pick([-1, 1]) * rand(.5, .8) : rand(-.25, .25));
+      squirts.push({ x: P.x + Math.cos(a) * R * .3, y: P.y + Math.sin(a) * R * .3, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 120, trail: [], t: 0, w: R * rand(.55, .68) * (i ? .7 : 1), landed: false });
+    }
+    burst(P.x, P.y, 7, ['cream'], ['#fffaf0'], 260);
+    setTimeout(() => SFX.squirt(), 20);
+  }
   const word = combo >= 3 ? `Combo x${combo}!` : p.kind === 'gold' ? 'Golden!' : p.kind === 'ingrown' ? 'Pop!' : big ? 'BIG POP!' : pick(WORD_POP);
   if (p.kind === 'ingrown') {
     const ih = hairs.find(h => h.pimple === p);
@@ -752,7 +797,7 @@ function popPimple(p) {
   checkClear();
 }
 function pluckHair(h, vx, vy) {
-  const F = hairFoll(h), G = h.grip || F;
+  const F = h.ingrown ? hairPts(h, INGROWN_N)[INGROWN_EXIT] : hairFoll(h), G = h.grip || F;
   endAction(true);
   h.pulled = true; h.tension = 0;
   const mult = bumpCombo();
@@ -761,7 +806,7 @@ function pluckHair(h, vx, vy) {
   ring(F.x, F.y, 70 * S, '#fff');
   burst(F.x, F.y, 14, ['sparkle', 'star', 'dot', 'heart'], ['#fff', '#ffe17a', '#ffc2d1', '#b8e8d0'], 420);
   const ang = Math.atan2(G.y - F.y, G.x - F.x);
-  flyers.push({ kind: 'hair', x: G.x, y: G.y, vx: clamp(vx * .35, -700, 700) + Math.cos(ang) * 250, vy: Math.min(clamp(vy * .35, -900, 500), 0) - 420, t: 0, home: .85, val: pts, rot: ang + Math.PI / 2, vr: rand(-9, 9), h: { len: h.len, curl: h.curl, col: client.hair } });
+  flyers.push({ kind: 'hair', x: G.x, y: G.y, vx: clamp(vx * .35, -700, 700) + Math.cos(ang) * 250, vy: Math.min(clamp(vy * .35, -900, 500), 0) - 420, t: 0, home: .85, val: pts, rot: ang + Math.PI / 2, vr: rand(-9, 9), h: { len: h.len, curl: h.curl, col: h.col, waves: h.waves, amp: h.amp, thick: h.thick, rootK: h.rootK * (h.ingrown ? 1.15 : 1), rootPal: h.rootPal } });
   addText(combo >= 3 ? `Combo x${combo}!` : h.ingrown ? 'Ingrown out!' : h.tough ? 'Mighty pluck!' : 'Pluck!', F.x, F.y - 40 * S, '#6fcfa6', 30);
   SFX.pluck(); setTimeout(() => SFX.sparkle(combo), 60);
   buzz([15, 25, 45]);
@@ -808,7 +853,7 @@ function nextClient() {
 function burst(x, y, n, types, cols, spd) {
   for (let i = 0; i < n; i++) {
     const a = rand(0, TAU), s = rand(.35, 1) * spd, type = pick(types);
-    particles.push({ type, x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s - spd * .25, life: rand(.5, 1), max: 1, size: (type === 'foam' ? rand(3, 7) : type === 'dot' ? rand(2.5, 5) : rand(7, 13)) * Math.max(S, .8), col: pick(cols), rot: rand(0, TAU), vr: rand(-6, 6), g: type === 'foam' ? 500 : 700, drag: 2.2 });
+    particles.push({ type, x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s - spd * .25, life: rand(.5, 1), max: 1, size: (type === 'foam' ? rand(3, 7) : type === 'cream' ? rand(2.5, 5.5) : type === 'dot' ? rand(2.5, 5) : rand(7, 13)) * Math.max(S, .8), col: pick(cols), rot: rand(0, TAU), vr: rand(-6, 6), g: type === 'foam' ? 500 : type === 'cream' ? 900 : 700, drag: 2.2 });
   }
 }
 function ring(x, y, r, col, a = .9) { particles.push({ type: 'ring', x, y, r0: 4, r1: r, life: .45, max: .45, col, a }); }
@@ -884,6 +929,18 @@ function update(dt) {
     p.vx *= dr; p.vy *= dr; p.vy += p.g * dt; p.x += p.vx * dt; p.y += p.vy * dt; p.rot += p.vr * dt;
     if (p.type === 'conf') p.flip += dt * 6;
   }
+  for (let i = squirts.length - 1; i >= 0; i--) {
+    const q = squirts[i]; q.t += dt;
+    if (q.t < .32) {
+      q.vy += 900 * dt; q.vx *= Math.exp(-2 * dt); q.x += q.vx * dt; q.y += q.vy * dt;
+      q.trail.push({ x: q.x, y: q.y });
+    } else {
+      if (!q.landed) { q.landed = true; dollops.push({ x: q.x, y: q.y, r: q.w * 1.4, t: 0, life: 2.6, rot: rand(0, TAU) }); burst(q.x, q.y, 2, ['sparkle'], ['#fff'], 60); }
+      q.trail.splice(0, Math.max(1, Math.ceil(q.trail.length * dt * 9)));
+      if (!q.trail.length) squirts.splice(i, 1);
+    }
+  }
+  for (let i = dollops.length - 1; i >= 0; i--) { const d = dollops[i]; d.t += dt; if (d.t > d.life) { burst(d.x, d.y, 3, ['sparkle'], ['#fff', '#ffe17a'], 50); dollops.splice(i, 1); } }
   for (let i = texts.length - 1; i >= 0; i--) { const t = texts[i]; t.t += dt; t.y -= dt * 34; if (t.t > t.life) texts.splice(i, 1); }
   // flyers
   for (let i = flyers.length - 1; i >= 0; i--) {
@@ -952,6 +1009,7 @@ function draw() {
 
   drawCharacter();
 
+  drawCream();
   // touch indicators
   drawTouches();
   drawHint();
@@ -1159,7 +1217,8 @@ function drawPimple(p) {
   const x = P.x + rand(-jit, jit), y = P.y + rand(-jit, jit);
   // halo
   const hg = ctx.createRadialGradient(x, y, R * .6, x, y, R * (1.9 + pr * .6));
-  hg.addColorStop(0, p.kind === 'gold' ? 'rgba(255,214,92,.5)' : `rgba(255,150,175,${.32 + pr * .25})`); hg.addColorStop(1, 'rgba(255,150,175,0)');
+  const pal = p.look.pal;
+  hg.addColorStop(0, p.kind === 'gold' ? 'rgba(255,214,92,.5)' : `rgba(${pal.halo},${.32 + pr * .25})`); hg.addColorStop(1, `rgba(${pal.halo},0)`);
   ctx.fillStyle = hg; ell(x, y, R * 2.6, R * 2.6); ctx.fill();
   // pinch folds
   if (pr > .05) {
@@ -1180,9 +1239,11 @@ function drawPimple(p) {
   const gold = p.kind === 'gold';
   const dg = ctx.createRadialGradient(-R * .3, -R * .35, R * .1, 0, 0, R);
   if (gold) { dg.addColorStop(0, '#fff6c7'); dg.addColorStop(.6, '#ffd65c'); dg.addColorStop(1, '#f3b03c'); }
-  else { dg.addColorStop(0, '#ffc9d4'); dg.addColorStop(.65, lerpCol('#ff9db2', '#ff7f9e', pr)); dg.addColorStop(1, '#f77799'); }
+  else { dg.addColorStop(0, pal.c0); dg.addColorStop(.65, lerpCol(pal.c1, pal.c2, pr)); dg.addColorStop(1, pal.edge); }
+  ctx.save(); ctx.rotate(p.look.rot); ctx.scale(p.look.ar, 1 / p.look.ar);
   ell(0, 0, R, R); ctx.fillStyle = dg; ctx.fill();
-  ctx.strokeStyle = gold ? '#e0992a' : '#e8668a'; ctx.lineWidth = Math.max(1.6, 2.4 * S); ctx.stroke();
+  ctx.strokeStyle = gold ? '#e0992a' : pal.line; ctx.lineWidth = Math.max(1.6, 2.4 * S) / Math.max(p.look.ar, 1 / p.look.ar); ctx.stroke();
+  ctx.restore();
   if (p.kind === 'ingrown') {
     // curled hair trapped inside, with a tiny tail poking out past the edge
     ctx.strokeStyle = hexA(client.hair, .85); ctx.lineWidth = Math.max(2.4, 3 * S); ctx.beginPath();
@@ -1191,10 +1252,15 @@ function drawPimple(p) {
     ctx.save(); ell(0, 0, R, R); ctx.clip(); ctx.fillStyle = 'rgba(255,190,205,.35)'; ctx.fillRect(-R, -R, R * 2, R * 2); ctx.restore();
   }
   // head
-  const hr = R * ((p.kind === 'ingrown' ? .36 : .42) + pr * .18 + hf * .1);
-  ell(0, -R * .08, hr, hr); ctx.fillStyle = gold ? '#fffbe8' : '#fffaf0'; ctx.fill();
+  const hr = R * ((p.kind === 'ingrown' ? .36 : .42) * p.look.hs + pr * .18 + hf * .1);
+  const hx0 = R * p.look.hx * (1 - pr * .5), hy0 = R * p.look.hy * (1 - pr * .5);
+  if (p.look.twin != null && !gold) {
+    const tx = hx0 + Math.cos(p.look.twin) * hr * 1.15, ty = hy0 + Math.sin(p.look.twin) * hr * 1.15;
+    ell(tx, ty, hr * .45, hr * .45); ctx.fillStyle = '#fffaf0'; ctx.fill(); ctx.strokeStyle = '#f4cbb6'; ctx.lineWidth = Math.max(1, 1.2 * S); ctx.stroke();
+  }
+  ell(hx0, hy0, hr, hr); ctx.fillStyle = gold ? '#fffbe8' : '#fffaf0'; ctx.fill();
   ctx.strokeStyle = gold ? '#f1cf80' : '#f4cbb6'; ctx.lineWidth = Math.max(1, 1.4 * S); ctx.stroke();
-  if (gold) { ctx.fillStyle = '#ffcf4a'; starPath(ctx, 0, -R * .08, hr * .7); ctx.fill(); }
+  if (gold) { ctx.fillStyle = '#ffcf4a'; starPath(ctx, hx0, hy0, hr * .7); ctx.fill(); }
   // highlight
   ctx.fillStyle = 'rgba(255,255,255,.95)'; ell(-R * .42, -R * .45, R * .2, R * .13, -.6); ctx.fill();
   ell(-R * .1, -R * .62, R * .07, R * .07); ctx.fill();
@@ -1217,12 +1283,12 @@ function drawPimple(p) {
   }
 }
 
-function drawRoot(x, y, rad, ang) {
+function drawRoot(x, y, rad, pal = ROOT_PALS[0]) {
   // big round pearly root bulb
   const g = ctx.createRadialGradient(x - rad * .35, y - rad * .35, rad * .1, x, y, rad);
-  g.addColorStop(0, '#ffffff'); g.addColorStop(.55, '#fff0f3'); g.addColorStop(1, '#ffc4d2');
+  g.addColorStop(0, pal[0]); g.addColorStop(.55, pal[1]); g.addColorStop(1, pal[2]);
   ell(x, y, rad, rad); ctx.fillStyle = g; ctx.fill();
-  ctx.strokeStyle = '#eba3b6'; ctx.lineWidth = Math.max(1.5, 2 * S); ctx.stroke();
+  ctx.strokeStyle = pal[3]; ctx.lineWidth = Math.max(1.5, 2 * S); ctx.stroke();
   ctx.fillStyle = 'rgba(255,255,255,.95)'; ell(x - rad * .38, y - rad * .4, rad * .26, rad * .17, -.6); ctx.fill();
 }
 function strokePts(pts) {
@@ -1231,8 +1297,9 @@ function strokePts(pts) {
   const l = pts[pts.length - 1]; ctx.lineTo(l.x, l.y); ctx.stroke();
 }
 function drawHair(h) {
-  const F = hairFoll(h), r = head.r, t = h.tension, hl = Math.max(2.6, 3.6 * S);
-  const rootR = r * .068;
+  const F = hairFoll(h), r = head.r, t = h.tension, hl = Math.max(2.6, 3.6 * S) * h.thick;
+  const rootR = r * .068 * h.rootK;
+  if (h.grip && h.ingrown) { drawIngrownPull(h, hl, rootR); return; }
   if (h.grip && t >= 0) {
     const G = h.grip, dx = G.x - F.x, dy = G.y - F.y, L = Math.hypot(dx, dy) || 1, ux = dx / L, uy = dy / L, px = -uy, py = ux;
     const lift = t * r * .13, A = { x: F.x + ux * lift, y: F.y + uy * lift }, wB = r * (.05 + t * .05);
@@ -1243,13 +1310,13 @@ function drawHair(h) {
     ctx.bezierCurveTo(A.x + px * wB * .5, A.y + py * wB * .5, F.x + px * wB * .7, F.y + py * wB * .7, F.x + px * wB * 1.5, F.y + py * wB * 1.5);
     ctx.fillStyle = client.skin; ctx.fill(); ctx.strokeStyle = client.line; ctx.lineWidth = Math.max(1.5, 2.2 * S); ctx.stroke();
     // peeking root
-    if (t > .45) { const k = (t - .45) / .55; drawRoot(A.x - ux * rootR * (1 - k) * .4, A.y - uy * rootR * (1 - k) * .4, rootR * (.4 + k * .6)); }
+    if (t > .45) { const k = (t - .45) / .55; drawRoot(A.x - ux * rootR * (1 - k) * .4, A.y - uy * rootR * (1 - k) * .4, rootR * (.4 + k * .6), h.rootPal); }
     // stretched hair
     const pts = [], n = 8, wav = (1 - t) * h.curl * r * .02;
     for (let i = 0; i <= n; i++) { const s = i / n; pts.push({ x: lerp(A.x, G.x, s) + px * Math.sin(s * Math.PI * 2) * wav, y: lerp(A.y, G.y, s) + py * Math.sin(s * Math.PI * 2) * wav }); }
     const extra = Math.max(r * .04, h.len * r - L * .7);
     for (let i = 1; i <= 4; i++) { const s = i / 4; pts.push({ x: G.x + ux * extra * s + px * Math.sin(s * 3 + time * 3) * h.curl * extra * .4, y: G.y + uy * extra * s + py * Math.sin(s * 3 + time * 3) * h.curl * extra * .4 }); }
-    ctx.strokeStyle = client.hair; ctx.lineWidth = hl; strokePts(pts);
+    ctx.strokeStyle = h.col; ctx.lineWidth = hl; strokePts(pts);
     // stress lines
     if (t > .5) {
       ctx.strokeStyle = `rgba(255,255,255,${t})`; ctx.lineWidth = 2.5 * S;
@@ -1264,8 +1331,8 @@ function drawHair(h) {
     const pts = hairPts(h, 16), k = 11;
     ctx.fillStyle = 'rgba(255,170,190,.35)'; ell(F.x, F.y, r * .1, r * .1); ctx.fill();
     ctx.fillStyle = hexA(client.line, .3); ell(F.x, F.y, rootR * .9, rootR * .9); ctx.fill();
-    ctx.strokeStyle = hexA(client.hair, .4); ctx.lineWidth = hl; ctx.setLineDash([hl * 1.4, hl * 1.2]); strokePts(pts.slice(0, k + 1)); ctx.setLineDash([]);
-    ctx.strokeStyle = client.hair; ctx.lineWidth = hl * 1.1; strokePts(pts.slice(k));
+    ctx.globalAlpha = .4; ctx.strokeStyle = h.col; ctx.lineWidth = hl; ctx.setLineDash([hl * 1.4, hl * 1.2]); strokePts(pts.slice(0, k + 1)); ctx.setLineDash([]); ctx.globalAlpha = 1;
+    ctx.strokeStyle = h.col; ctx.lineWidth = hl * 1.1; strokePts(pts.slice(k));
     const tip = pts[16];
     ctx.fillStyle = '#ffe17a'; sparklePath(ctx, tip.x, tip.y, 6 * S * (1 + Math.sin(time * 6) * .35)); ctx.fill();
     return;
@@ -1273,11 +1340,79 @@ function drawHair(h) {
   // follicle + faint root under skin
   ctx.fillStyle = hexA(client.line, .25); ell(F.x, F.y, rootR * .9, rootR * .9); ctx.fill();
   ctx.fillStyle = hexA(client.hair, .7); ell(F.x, F.y, hl * .7, hl * .7); ctx.fill();
-  ctx.strokeStyle = client.hair; ctx.lineWidth = hl; strokePts(hairPts(h));
+  ctx.strokeStyle = h.col; ctx.lineWidth = hl; strokePts(hairPts(h));
   // shine
   const pts = hairPts(h, 10);
   ctx.strokeStyle = 'rgba(255,255,255,.35)'; ctx.lineWidth = hl * .35; strokePts(pts.slice(2, 6));
   if (h.tough) { ctx.fillStyle = '#ffe17a'; sparklePath(ctx, pts[10].x, pts[10].y, 5 * S * (1 + Math.sin(time * 5) * .3)); ctx.fill(); }
+}
+
+const INGROWN_N = 22, INGROWN_EXIT = 15;
+function ptAt(pts, f) {
+  const i = clamp(Math.floor(f), 0, pts.length - 2), k = clamp(f - i, 0, 1);
+  return { x: lerp(pts[i].x, pts[i + 1].x, k), y: lerp(pts[i].y, pts[i + 1].y, k) };
+}
+// Ingrown hair being pulled: the rest of the loop is still under the skin, and the
+// round root slides along it towards the exit point as you pull.
+function drawIngrownPull(h, hl, rootR) {
+  const pts = hairPts(h, INGROWN_N), E = pts[INGROWN_EXIT], G = h.grip, t = clamp(h.tension, 0, 1), r = head.r;
+  const stuck = h.stuckT > 0 && !h.freed ? clamp(h.stuckT / .9, 0, 1) : 0;
+  const ri = t * INGROWN_EXIT;
+  const jit = stuck * 1.6 * S;
+  const emb = [ptAt(pts, ri)];
+  for (let i = Math.ceil(ri + .001); i <= INGROWN_EXIT; i++) emb.push({ x: pts[i].x + rand(-jit, jit), y: pts[i].y + rand(-jit, jit) });
+  if (emb.length > 1) {
+    // raised ridge where the hair runs under the skin
+    ctx.strokeStyle = hexA(client.line, .28); ctx.lineWidth = hl * 3.4; strokePts(emb);
+    ctx.strokeStyle = lighten(client.skin); ctx.lineWidth = hl * 2.6; strokePts(emb);
+    ctx.globalAlpha = .55; ctx.strokeStyle = h.col; ctx.lineWidth = hl; ctx.setLineDash([hl * 1.4, hl * 1.1]); strokePts(emb); ctx.setLineDash([]); ctx.globalAlpha = 1;
+  }
+  // the root, travelling under the skin as a little bump
+  const B = emb[0], br = rootR * (.75 + stuck * .1);
+  ell(B.x, B.y, br * 1.35, br * 1.35); ctx.fillStyle = lighten(client.skin); ctx.fill(); ctx.strokeStyle = hexA(client.line, .6); ctx.lineWidth = Math.max(1.5, 2 * S); ctx.stroke();
+  ctx.globalAlpha = .6; drawRoot(B.x, B.y, br, h.rootPal); ctx.globalAlpha = 1;
+  if (stuck > 0) {
+    ctx.strokeStyle = `rgba(255,255,255,${.5 + stuck * .5})`; ctx.lineWidth = 2.5 * S;
+    for (let i = 0; i < 5; i++) { const a = i / 5 * TAU + time * 4, r1 = br * 1.7, r2 = r1 + 5 * S + stuck * 6 * S; ctx.beginPath(); ctx.moveTo(B.x + Math.cos(a) * r1, B.y + Math.sin(a) * r1); ctx.lineTo(B.x + Math.cos(a) * r2, B.y + Math.sin(a) * r2); ctx.stroke(); }
+  }
+  // exit point: skin tents toward the fingers
+  const dx = G.x - E.x, dy = G.y - E.y, L = Math.hypot(dx, dy) || 1, ux = dx / L, uy = dy / L, px = -uy, py = ux;
+  const lift = (.3 + t * .7) * r * .07, A = { x: E.x + ux * lift, y: E.y + uy * lift }, wB = r * (.04 + t * .03);
+  ctx.beginPath();
+  ctx.moveTo(E.x - px * wB * 1.5, E.y - py * wB * 1.5);
+  ctx.bezierCurveTo(E.x - px * wB * .7, E.y - py * wB * .7, A.x - px * wB * .5, A.y - py * wB * .5, A.x, A.y);
+  ctx.bezierCurveTo(A.x + px * wB * .5, A.y + py * wB * .5, E.x + px * wB * .7, E.y + py * wB * .7, E.x + px * wB * 1.5, E.y + py * wB * 1.5);
+  ctx.fillStyle = client.skin; ctx.fill(); ctx.strokeStyle = client.line; ctx.lineWidth = Math.max(1.5, 2.2 * S); ctx.stroke();
+  if (t > .9) drawRoot(A.x, A.y, rootR * (t - .9) * 10 * .9, h.rootPal);
+  // pulled-out part of the hair, from the exit to the fingers and a little tail beyond
+  const out = [];
+  for (let i = 0; i <= 6; i++) { const s = i / 6; out.push({ x: lerp(A.x, G.x, s), y: lerp(A.y, G.y, s) }); }
+  const extra = r * .05;
+  for (let i = 1; i <= 3; i++) { const s = i / 3; out.push({ x: G.x + ux * extra * s + px * Math.sin(s * 3 + time * 4) * extra * .5, y: G.y + uy * extra * s + py * Math.sin(s * 3 + time * 4) * extra * .5 }); }
+  ctx.strokeStyle = h.col; ctx.lineWidth = hl * 1.1; strokePts(out);
+}
+
+function drawCream() {
+  for (const d of dollops) {
+    const k = d.t < .15 ? easeOutBack(d.t / .15) : 1, fade = clamp((d.life - d.t) / .5, 0, 1), r = d.r * k * (.6 + fade * .4);
+    ctx.globalAlpha = fade;
+    ctx.save(); ctx.translate(d.x, d.y); ctx.rotate(d.rot);
+    ctx.fillStyle = '#fffaf0'; ctx.strokeStyle = '#efd9bf'; ctx.lineWidth = Math.max(1.4, 1.8 * S);
+    ctx.beginPath(); ctx.ellipse(0, 0, r, r * .78, 0, 0, TAU); ctx.ellipse(r * .55, -r * .35, r * .5, r * .45, 0, 0, TAU); ctx.ellipse(-r * .6, -r * .2, r * .45, r * .4, 0, 0, TAU);
+    ctx.fill(); ctx.stroke(); ctx.fill();
+    ctx.fillStyle = '#fff'; ell(-r * .3, -r * .3, r * .3, r * .18, -.4); ctx.fill();
+    ctx.restore();
+    if (fade < .7) { ctx.fillStyle = '#fff'; sparklePath(ctx, d.x + d.r * .4, d.y - d.r * .5, 6 * S * Math.sin((1 - fade) * Math.PI)); ctx.fill(); }
+    ctx.globalAlpha = 1;
+  }
+  for (const q of squirts) {
+    if (q.trail.length < 2) continue;
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    ctx.strokeStyle = '#efd9bf'; ctx.lineWidth = q.w * 2 + 3; strokePts(q.trail);
+    ctx.strokeStyle = '#fffaf0'; ctx.lineWidth = q.w * 2; strokePts(q.trail);
+    ctx.strokeStyle = 'rgba(255,255,255,.95)'; ctx.lineWidth = q.w * .5;
+    strokePts(q.trail.map(p => ({ x: p.x - q.w * .35, y: p.y - q.w * .35 })));
+  }
 }
 
 function drawTouches() {
@@ -1342,6 +1477,7 @@ function drawParticle(p) {
     case 'heart': heartPath(ctx, 0, 0, s); ctx.fill(); break;
     case 'star': starPath(ctx, 0, 0, s); ctx.fill(); break;
     case 'sparkle': sparklePath(ctx, 0, 0, s); ctx.fill(); break;
+    case 'cream': ell(0, 0, s, s * .85); ctx.fill(); ctx.strokeStyle = '#efd9bf'; ctx.lineWidth = 1.2; ctx.stroke(); ctx.fillStyle = '#fff'; ell(-s * .35, -s * .3, s * .3, s * .2); ctx.fill(); break;
     case 'foam': ell(0, 0, s, s); ctx.fill(); ctx.strokeStyle = '#f4d9c5'; ctx.lineWidth = 1.2; ctx.stroke(); break;
     case 'conf': ctx.scale(1, Math.cos(p.flip)); ctx.fillRect(-s / 2, -s * .3, s, s * .6); break;
     default: ell(0, 0, s, s); ctx.fill();
@@ -1358,9 +1494,9 @@ function drawFlyer(f) {
     const sc = 1.5 * homing * Math.min(1, f.t * 6 + .6), r = head.r, L = f.h.len * r * 1.1;
     ctx.scale(sc, sc);
     const pts = [];
-    for (let i = 0; i <= 10; i++) { const s = i / 10; pts.push({ x: Math.sin(s * Math.PI * 2.2 + time * 6) * f.h.curl * L * .12 * (.3 + s), y: -s * L }); }
-    ctx.strokeStyle = f.h.col; ctx.lineWidth = Math.max(2.6, 3.6 * S); strokePts(pts);
-    drawRoot(0, 0, r * .07);
+    for (let i = 0; i <= 10; i++) { const s = i / 10; pts.push({ x: Math.sin(s * Math.PI * f.h.waves + time * 6) * f.h.curl * L * f.h.amp * (.3 + s), y: -s * L }); }
+    ctx.strokeStyle = f.h.col; ctx.lineWidth = Math.max(2.6, 3.6 * S) * f.h.thick; strokePts(pts);
+    drawRoot(0, 0, r * .07 * f.h.rootK, f.h.rootPal);
   }
   ctx.restore();
 }
