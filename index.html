@@ -10,6 +10,9 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Pluck &amp; Pop">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='34' r='26' fill='%23fff4ec' stroke='%23e6b3a3' stroke-width='4'/%3E%3Ccircle cx='32' cy='34' r='10' fill='%23ff8fa6'/%3E%3Ccircle cx='32' cy='32' r='4' fill='%23fffaf0'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -51,14 +54,41 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:
 .sub{margin-top:14px;font-size:18px;font-weight:600;opacity:.8}
 .btn{pointer-events:auto;border:0;font-family:inherit;font-weight:700;font-size:22px;color:#fff;background:linear-gradient(#ff97b2,#ff7095);padding:16px 34px;border-radius:999px;box-shadow:0 6px 0 #d9557a,0 14px 26px rgba(217,85,122,.35);cursor:pointer;letter-spacing:.3px}
 .btn.alt{background:linear-gradient(#9ee6c4,#6fcfa6);box-shadow:0 6px 0 #48a982,0 14px 26px rgba(72,169,130,.35)}
-#title .btn{position:absolute;bottom:calc(env(safe-area-inset-bottom) + 13vh);animation:breathe 1.8s ease-in-out infinite}
+#title .btn{animation:breathe 1.8s ease-in-out infinite}
+.topbtns{position:absolute;top:calc(env(safe-area-inset-top) + 12px);right:calc(env(safe-area-inset-right) + 12px);display:flex;gap:8px}
+.menu{position:absolute;left:0;right:0;bottom:calc(env(safe-area-inset-bottom) + 3vh);display:flex;flex-direction:column;align-items:center;gap:12px;padding:0 16px}
+.menu2,.cardbtns{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.cardbtns{flex-direction:column;align-items:center;margin-top:12px}
+.pbtn{pointer-events:auto;border:0;font-family:inherit;font-weight:600;font-size:16px;color:var(--plum);background:var(--cream);padding:10px 16px;border-radius:999px;box-shadow:0 4px 0 rgba(150,80,110,.18);cursor:pointer}
+.pbtn:active{transform:translateY(2px) scale(.96)}
+.pbtn[hidden],.tip[hidden]{display:none}
+.tip{font-size:13px;font-weight:500;opacity:.75}
+#stickerN{opacity:.6;font-weight:500}
+#who.warn{background:#ffe1e1;color:#d4405f;animation:bump .5s ease infinite}
 @keyframes breathe{50%{transform:scale(1.06)}}
 #ver{position:absolute;right:calc(env(safe-area-inset-right) + 12px);bottom:calc(env(safe-area-inset-bottom) + 8px);font-size:11px;font-weight:500;opacity:.45}
-.howto{position:absolute;bottom:calc(env(safe-area-inset-bottom) + 4vh);font-size:14px;font-weight:500;opacity:.75;max-width:320px;line-height:1.35;background:rgba(255,250,243,.8);padding:8px 14px;border-radius:14px}
+.howto{font-size:14px;font-weight:500;opacity:.75;max-width:320px;line-height:1.35;background:rgba(255,250,243,.8);padding:8px 14px;border-radius:14px}
 
 #win{background:linear-gradient(rgba(255,220,230,0) 40%,rgba(255,220,230,.5));justify-content:flex-end;padding-bottom:calc(env(safe-area-inset-bottom) + 28px)}
 .card{background:var(--cream);border-radius:30px;padding:20px 24px 26px;width:min(330px,88vw);box-shadow:var(--shadow);transform:scale(.6);opacity:0;transition:transform .5s cubic-bezier(.3,1.7,.5,1),opacity .25s}
-#win:not(.hide) .card{transform:scale(1);opacity:1}
+.screen:not(.hide) .card{transform:scale(1);opacity:1}
+#book,#rushOver{background:rgba(255,220,230,.55)}
+.bookcard{width:min(370px,92vw);max-height:calc(100% - 20px);overflow:auto}
+.pages{display:flex;align-items:center;justify-content:center;gap:14px;margin:10px 0 6px}
+#grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:6px 0 10px;position:relative}
+.stk{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:13px;font-weight:600}
+.stk img{width:100%;max-width:92px;aspect-ratio:1;border-radius:50%;border:4px solid #fff;box-shadow:0 3px 0 rgba(150,80,110,.15);background:#fff}
+.stk.locked img{filter:brightness(0) opacity(.12)}
+.stk.locked span{opacity:.4}
+.stk i{font-style:normal;font-size:11px;opacity:.6;font-weight:500}
+.lockmsg{position:absolute;inset:0;display:grid;place-items:center;text-align:center;font-weight:600;font-size:15px;padding:20px;background:rgba(255,250,243,.75);border-radius:16px}
+#unlocks{font-size:13px;line-height:1.6;margin-bottom:14px;opacity:.85}
+#newSticker{display:flex;align-items:center;gap:12px;justify-content:center;margin:-2px 0 14px;text-align:left}
+#newSticker[hidden]{display:none}
+#newSticker img{width:62px;height:62px;border-radius:50%;border:4px solid #fff;box-shadow:0 3px 0 rgba(150,80,110,.15);animation:stickIn .6s cubic-bezier(.3,1.8,.5,1) both}
+#newSticker b{display:block;color:var(--pink);font-size:17px}
+#newSticker small{display:block;font-size:13px;opacity:.75}
+@keyframes stickIn{from{transform:scale(0) rotate(-40deg)}to{transform:scale(1) rotate(-6deg)}}
 .card h2{margin:0;font-size:30px;color:var(--pink);line-height:1.1}
 .card p{margin:4px 0 0;font-size:16px;font-weight:500;opacity:.8}
 .row{display:flex;align-items:center;justify-content:center;gap:14px;margin:6px 0 12px}
@@ -67,6 +97,9 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:
 .stars span.on{color:#ffcf4a;text-shadow:0 3px 0 #f0a92a}
 .stars span.show{transform:scale(1)}
 .big{font-size:24px;font-weight:700}
+#banner{position:fixed;left:50%;top:calc(env(safe-area-inset-top) + 60px);transform:translateX(-50%);width:max-content;max-width:calc(100vw - 32px);background:var(--cream);color:var(--plum);padding:9px 16px;border-radius:18px;font-weight:600;font-size:15px;text-align:center;box-shadow:0 3px 0 rgba(150,80,110,.15);transition:opacity .3s,transform .4s cubic-bezier(.3,1.6,.5,1);pointer-events:none;z-index:5}
+#banner.hide{opacity:0;transform:translateX(-50%) translateY(-14px)}
+#bar.cream{background:linear-gradient(90deg,#fff3d6,#ffd36b)}
 #toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 22px);transform:translateX(-50%) translateY(80px);background:var(--cream);padding:9px 16px;border-radius:99px;font-weight:600;font-size:15px;box-shadow:0 3px 0 rgba(150,80,110,.15);transition:transform .4s cubic-bezier(.3,1.6,.5,1);white-space:nowrap;pointer-events:none}
 #toast.show{transform:translateX(-50%) translateY(0)}
 </style>
@@ -75,19 +108,58 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:
 <canvas id="c"></canvas>
 
 <div id="hud" class="off">
+  <button class="ib" id="bHome" aria-label="Back to the spa menu">🏠</button>
   <div class="pill" id="who">Mochi <small>#1</small></div>
   <div id="barWrap"><div id="bar"></div></div>
   <div class="pill" id="score">⭐ <b id="scoreN">0</b></div>
-  <button class="ib" id="bSfx" aria-label="Sound effects">🔊</button>
-  <button class="ib" id="bMus" aria-label="Music">🎵</button>
 </div>
 
 <div id="title" class="screen">
+  <div class="topbtns">
+    <button class="ib" id="bSfx" aria-label="Sound effects">🔊</button>
+    <button class="ib" id="bMus" aria-label="Music">🎵</button>
+  </div>
   <div class="logo" id="logo"></div>
   <div class="sub">a cozy little skin spa ✿</div>
-  <button class="btn" id="play">Open the spa ✨</button>
-  <div id="ver">v2 · new music</div>
-  <div class="howto">Use <b>two fingers</b>: pinch a bump to <b>pop</b> it, or pinch a hair and <b>pull</b> 🔊 sound on!</div>
+  <div class="menu">
+    <button class="btn" id="play">Open the spa ✨</button>
+    <div class="menu2">
+      <button class="pbtn" id="rushBtn">⏱ Rush hour</button>
+      <button class="pbtn" id="bookBtn">📖 Stickers <span id="stickerN"></span></button>
+    </div>
+    <button class="pbtn" id="installBtn" hidden>📲 Add to home screen</button>
+    <div class="howto">Use <b>two fingers</b>: pinch a bump to <b>pop</b> it, or pinch a hair and <b>pull</b> 🔊 sound on!</div>
+    <div class="tip" id="iosTip" hidden>Play it like an app: tap <b>Share</b>, then <b>Add to Home Screen</b></div>
+  </div>
+  <div id="ver">v3</div>
+</div>
+
+<div id="book" class="screen hide">
+  <div class="card bookcard">
+    <h2>Sticker book</h2>
+    <p id="bookSub">Make every client glow to collect their sticker</p>
+    <div class="pages">
+      <button class="ib" id="pgPrev" aria-label="Previous page">‹</button>
+      <b id="pageName">Page 1</b>
+      <button class="ib" id="pgNext" aria-label="Next page">›</button>
+    </div>
+    <div id="grid"></div>
+    <div id="unlocks"></div>
+    <button class="btn alt" id="bookClose">Done</button>
+  </div>
+</div>
+
+<div id="rushOver" class="screen hide">
+  <div class="card">
+    <h2>Time's up!</h2>
+    <p id="rushMsg">You pampered 0 clients</p>
+    <div class="big" id="rushScore">0</div>
+    <p id="rushBest">Best: 0</p>
+    <div class="cardbtns">
+      <button class="btn" id="rushAgain">Again ⏱</button>
+      <button class="pbtn" id="rushHome">Back to the spa</button>
+    </div>
+  </div>
 </div>
 
 <div id="win" class="screen hide">
@@ -96,9 +168,11 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:
     <p id="winMsg">Mochi feels brand new</p>
     <div class="row"><div class="stars" id="stars"><span>★</span><span>★</span><span>★</span></div>
     <div class="big" id="winScore">+0</div></div>
+    <div id="newSticker"><img id="stickerImg" alt=""><div><b id="stickerTxt">New sticker!</b><small id="unlockTxt"></small></div></div>
     <button class="btn alt" id="next">Next client →</button>
   </div>
 </div>
+<div id="banner" class="hide"></div>
 <div id="toast"></div>
 
 <script>
@@ -107,7 +181,8 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:
    Pluck & Pop: a cozy skin spa. Everything is drawn & synthesized in code.
    ============================================================ */
 const $ = s => document.querySelector(s);
-const cv = $('#c'), ctx = cv.getContext('2d');
+const cv = $('#c');
+let ctx = cv.getContext('2d');
 const TAU = Math.PI * 2;
 const rand = (a, b) => a + Math.random() * (b - a);
 const pick = a => a[(Math.random() * a.length) | 0];
@@ -120,8 +195,9 @@ const easeInBack = t => 2.7 * t * t * t - 1.7 * t * t;
 
 /* ---------- save ---------- */
 const SAVE_KEY = 'popPluck.v1';
-const save = Object.assign({ level: 1, total: 0, tutPop: false, tutPull: false, sfx: true, music: true },
-  (() => { try { return JSON.parse(localStorage.getItem(SAVE_KEY)) || {}; } catch (e) { return {}; } })());
+const loaded = (() => { try { return JSON.parse(localStorage.getItem(SAVE_KEY)) || {}; } catch (e) { return {}; } })();
+const save = Object.assign({ level: 1, total: 0, tutPop: false, tutPull: false, sfx: true, music: true, stickers: {}, rushBest: 0, tutDone: false }, loaded);
+if (!('tutDone' in loaded) && save.level > 1) save.tutDone = true; // players from before the tutorial existed
 const persist = () => { try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch (e) {} };
 
 /* ---------- haptics ---------- */
@@ -282,6 +358,19 @@ const SFX = (() => {
       tone({ f: 320, f2: 130, t: .08, v: .18 });
       tone({ f: 700, f2: 1100, t: .04, v: .06, when: .06 });
     },
+    plop() {
+      tone({ f: 260, f2: 760, t: .11, v: .38 });
+      tone({ f: 900, f2: 220, t: .07, v: .25, when: .03 });
+      noise({ t: .05, type: 'lowpass', f: 1400, v: .25 });
+      bell(1760, .08, .06, .3);
+    },
+    swish() { noise({ t: .2, f: 1400, f2: 2800, q: .9, v: .07, a: .04 }); },
+    squeegee() {
+      tone({ f: 1250, f2: 1750, t: .13, v: .09 });
+      tone({ f: 2500, f2: 3400, t: .08, v: .03, type: 'triangle' });
+      noise({ t: .1, type: 'highpass', f: 4000, v: .05 });
+    },
+    tickTimer(hi) { tone({ f: hi ? 1500 : 1100, t: .05, v: .1, type: 'triangle' }); },
     squirt() {
       // liquid "pssshlp": fluttering band of noise that sweeps down, plus tiny bubble blips
       if (!ok()) return;
@@ -379,7 +468,23 @@ const CLIENTS = [
   { name: 'Kiki', skin: '#efe6ff', skin2: '#ddd0ff', line: '#a997d6', blush: '#ffafd0', ears: 'cat', earIn: '#ffc6df', towel: '#fff0bd', towelLine: '#e3c56f', hair: '#5d4670', bg: ['#fbf4ff', '#ecdfff'], mouth: 'cat' },
   { name: 'Pip', skin: '#e5f4d4', skin2: '#cfe8b6', line: '#97bf7b', blush: '#ffab9f', ears: 'mouse', earIn: '#ffcfcf', towel: '#ffdcc6', towelLine: '#eca783', hair: '#4f5a33', bg: ['#fffbea', '#fcebc9'], mouth: 'smile' },
   { name: 'Bao', skin: '#fffaf1', skin2: '#f4e9d6', line: '#d6bd99', blush: '#ffb3b3', ears: 'none', earIn: '#ffd0d0', towel: '#ffe1ec', towelLine: '#eea9c1', hair: '#5e4337', bg: ['#fff6f0', '#ffe3d6'], mouth: 'smile' },
+  // page 2: unlocked by collecting every sticker on page 1
+  { name: 'Pickle', skin: '#d3efc0', skin2: '#b6e09d', line: '#80b566', blush: '#ffa7a0', ears: 'frog', earIn: '#ebf9e2', towel: '#ffd9e6', towelLine: '#efa3bd', hair: '#3f5a2f', bg: ['#f2fbea', '#dcf2cf'], mouth: 'smile' },
+  { name: 'Bamboo', skin: '#ffffff', skin2: '#efeaf0', line: '#b9adbb', blush: '#ffb3c4', ears: 'round', earCol: '#5d4b5b', earIn: '#5d4b5b', patches: '#a5939f', towel: '#d6f0e4', towelLine: '#8ccfae', hair: '#4a3a48', bg: ['#f4fbf6', '#ddf1e6'], mouth: 'cat' },
+  { name: 'Nimbus', skin: '#eef6ff', skin2: '#d9e8fb', line: '#9db8de', blush: '#ffb8d2', ears: 'puffs', puffCol: '#f9fcff', towel: '#fff1c9', towelLine: '#e6c776', hair: '#5c6b8c', bg: ['#f0f7ff', '#d9e9ff'], mouth: 'smile' },
+  { name: 'Sunny', skin: '#fff1b8', skin2: '#ffe08a', line: '#e0b54f', blush: '#ffab9a', ears: 'tuft', earIn: '#ffcf5c', towel: '#d9ecff', towelLine: '#97bde6', hair: '#7a5a2b', bg: ['#fffbe6', '#fff0bd'], mouth: 'cat' },
+  { name: 'Mallow', skin: '#ffdde6', skin2: '#ffc4d3', line: '#e597ad', blush: '#ff8fae', ears: 'pig', earIn: '#ffb3c6', towel: '#e9e0ff', towelLine: '#b6a4e6', hair: '#6b4250', bg: ['#fff2f6', '#ffdce7'], mouth: 'smile' },
+  { name: 'Taro', skin: '#f1e6ff', skin2: '#e1d1fb', line: '#b29ad8', blush: '#ffb0cc', ears: 'lamb', puffCol: '#fffaf2', earIn: '#ffd3df', towel: '#ffe6cf', towelLine: '#eab184', hair: '#5b4670', bg: ['#fbf6ff', '#efe4ff'], mouth: 'cat' },
 ];
+const PATTERNS = [
+  { id: 'dots', need: 3, name: 'dotty towels' },
+  { id: 'stripes', need: 6, name: 'stripy towels' },
+  { id: 'hearts', need: 9, name: 'heart towels' },
+  { id: 'stars', need: 12, name: 'starry towels' },
+];
+const stickerCount = () => Object.keys(save.stickers).length;
+const page2Open = () => CLIENTS.slice(0, 6).every(c => save.stickers[c.name]);
+const unlockedClients = () => CLIENTS.slice(0, page2Open() ? 12 : 6);
 const SAY_HI = ['Hi! I\'m {n}~', 'Hello! {n} here!', 'Spa day! I\'m {n}', 'Hiya, I\'m {n}!'];
 const SAY_POP = ['hehe!', 'ooh!', 'ahh~', 'so fresh!', 'eep!', 'nice!', 'wheee'];
 const SAY_PLUCK = ['yip!', 'ouchie!', 'eek!', 'wow!', 'boop!'];
@@ -407,6 +512,8 @@ const look = { x: 0, y: 0 };
 let scoreTarget = { x: 0, y: 0 };
 const pointers = new Map();
 let bgCanvas = null;
+let mode = 'relax', rush = null, finish = null, tutorial = null, towelPattern = 'plain', squeakT = 0;
+const creamCv = document.createElement('canvas'), cctx = creamCv.getContext('2d');
 let hx = n => head.cx + n * head.r, hy = n => head.cy + n * head.r;
 
 /* ---------- layout ---------- */
@@ -464,10 +571,13 @@ function roundRect(c, x, y, w, h, r) { c.beginPath(); c.moveTo(x + r, y); c.arcT
    LEVEL GENERATION
    ============================================================ */
 const EYE_L = { x: -.36, y: -.04 }, EYE_R = { x: .36, y: -.04 }, MOUTH = { x: 0, y: .27 };
-function genLevel(n) {
-  client = CLIENTS[(n - 1) % CLIENTS.length];
-  pimples = []; hairs = [];
-  const np = Math.min(3 + n, 10), nh = Math.min(1 + Math.ceil(n / 2), 6);
+function genLevel(n, opts = {}) {
+  const pool = unlockedClients();
+  client = opts.client || (opts.rush ? pick(pool.filter(c => c !== client)) : pool[(n - 1) % pool.length]);
+  towelPattern = pick(['plain', 'plain', ...PATTERNS.filter(p => stickerCount() >= p.need).map(p => p.id)]);
+  pimples = []; hairs = []; finish = null; tutorial = null;
+  if (!opts.rush && !save.tutDone) { buildTutorial(); resetLevelState(); return; }
+  const np = Math.min(3 + n, 8), nh = Math.min(1 + Math.ceil(n / 2), 5) - (n >= 3 ? 1 : 0) - (n >= 6 ? 1 : 0);
   const taken = [];
   const okSpot = (x, y, rad, minGap) => {
     if ((x * x) + (y / .9) * (y / .9) > Math.pow(.8 - rad, 2)) return false;
@@ -490,14 +600,35 @@ function genLevel(n) {
       }
     }
   }
-  for (let i = ni; i < np; i++) {
-    let kind = 'small';
-    if (n >= 2 && (i === 0 || Math.random() < .22)) kind = 'big';
-    if (n >= 3 && i === 1 && Math.random() < .6) kind = 'gold';
-    const size = kind === 'big' ? rand(.095, .11) : kind === 'gold' ? .08 : rand(.062, .078);
-    for (let tries = 0; tries < 300; tries++) {
-      const x = rand(-.8, .8), y = rand(-.34, .75);
-      if (okSpot(x, y, size, .1)) { taken.push({ x, y, r: size }); pimples.push(newPimple(x, y, size, kind)); break; }
+  // blackheads
+  const nb = n >= 2 ? Math.min(1 + Math.floor((n - 1) / 3), 3) : 0;
+  for (let i = 0; i < nb; i++) for (let tries = 0; tries < 300; tries++) {
+    const x = rand(-.7, .7), y = rand(-.3, .72);
+    if (okSpot(x, y, .07, .08)) { taken.push({ x, y, r: .07 }); pimples.push(newPimple(x, y, .045, 'blackhead')); break; }
+  }
+  // clusters: 2-3 hairs from one spot, pluckable together
+  const nc = n >= 3 ? (n >= 6 ? 2 : 1) : 0;
+  for (let ci = 0; ci < nc; ci++) for (let tries = 0; tries < 300; tries++) {
+    const x = rand(-.6, .6), y = rand(.05, .66), base = Math.atan2(y + .2, x) + rand(-.3, .3);
+    const tx = x + Math.cos(base) * .2, ty = y + Math.sin(base) * .2;
+    if (okSpot(x, y, .1, .1) && dist(tx, ty, MOUTH.x, MOUTH.y) > .18 && dist(tx, ty, EYE_L.x, EYE_L.y) > .22 && dist(tx, ty, EYE_R.x, EYE_R.y) > .22) {
+      taken.push({ x, y, r: .1 }); taken.push({ x: (x + tx) / 2, y: (y + ty) / 2, r: .08 });
+      const k = n >= 5 ? 3 : 2, id = 'c' + ci + Math.random();
+      for (let i = 0; i < k; i++) {
+        const o = i - (k - 1) / 2;
+        hairs.push(newHair({ nx: x + o * .032 * Math.cos(base + Math.PI / 2), ny: y + o * .032 * Math.sin(base + Math.PI / 2), ang: base + o * .36, len: rand(.15, .2), curl: rand(.6, 1.1) * pick([-1, 1]), cluster: id }));
+      }
+      break;
+    }
+  }
+  // one long curly hair that needs two pulls
+  if (n >= 4) for (let tries = 0; tries < 300; tries++) {
+    const x = rand(-.6, .6), y = rand(.05, .6), ang = Math.atan2(y + .2, x) + rand(-.4, .4);
+    const tx = x + Math.cos(ang) * .28, ty = y + Math.sin(ang) * .28;
+    if (okSpot(x, y, .06, .12) && dist(tx, ty, MOUTH.x, MOUTH.y) > .18 && dist(tx, ty, EYE_L.x, EYE_L.y) > .22 && dist(tx, ty, EYE_R.x, EYE_R.y) > .22) {
+      taken.push({ x, y, r: .06 }); taken.push({ x: (x + tx) / 2, y: (y + ty) / 2, r: .1 });
+      hairs.push(newHair({ nx: x, ny: y, ang, len: .28, curl: pick([-1, 1]), long: true, stage: 0, waves: rand(3, 4), amp: rand(.14, .2), hook: true }));
+      break;
     }
   }
   for (let i = 0; i < nh; i++) {
@@ -513,9 +644,22 @@ function genLevel(n) {
       }
     }
   }
+  for (let i = ni + nb; i < np; i++) {
+    let kind = 'small';
+    if (n >= 2 && (i === 0 || Math.random() < .22)) kind = 'big';
+    if (n >= 3 && i === 1 && Math.random() < .6) kind = 'gold';
+    const size = kind === 'big' ? rand(.095, .11) : kind === 'gold' ? .08 : rand(.062, .078);
+    for (let tries = 0; tries < 300; tries++) {
+      const x = rand(-.8, .8), y = rand(-.34, .75);
+      if (okSpot(x, y, size, .1)) { taken.push({ x, y, r: size }); pimples.push(newPimple(x, y, size, kind)); break; }
+    }
+  }
+  resetLevelState();
+}
+function resetLevelState() {
   slips = 0; levelScore = 0; clearedT = -1; winGlow = 0; combo = 0;
-  setExpr('idle', 0); flyers = []; texts = []; squirts = []; dollops = [];
-  updateHud();
+  setExpr('idle', 0); flyers = []; texts = []; squirts = []; dollops = []; splats = [];
+  banner(null); updateHud();
 }
 const PIMPLE_PALS = [
   { c0: '#ffc9d4', c1: '#ff9db2', c2: '#ff7f9e', edge: '#f77799', line: '#e8668a', halo: '255,150,175' }, // rose
@@ -534,12 +678,39 @@ const hairTint = () => lerpCol(client.hair, pick(['#000000', '#ffffff', '#b5653a
 function hairLook() {
   return { waves: rand(1.3, 3.3), amp: rand(.07, .18), thick: rand(.8, 1.35), col: hairTint(), hook: Math.random() < .4, rootK: rand(.85, 1.3), rootPal: pick(ROOT_PALS) };
 }
+function buildTutorial() {
+  client = CLIENTS[0];
+  const p1 = newPimple(-.52, .16, .075, 'small');
+  const h1 = newHair({ nx: .52, ny: .3, ang: .7, len: .19, curl: .9, hook: false });
+  const bh = newPimple(-.3, .52, .05, 'blackhead');
+  const ing = newPimple(.06, -.24, .12, 'ingrown');
+  const ih = newHair({ nx: .06, ny: -.24, ang: rand(0, TAU), len: .25, curl: 1, ingrown: true, hidden: true, freed: false, stuckT: 0, pimple: ing, turns: 1.1, sq: .85, tilt: rand(0, TAU), spread: .9, hook: false });
+  pimples = [p1, bh, ing]; hairs = [h1, ih];
+  tutorial = { i: -1, steps: [
+    { txt: 'Pinch the bump with 2 fingers', done: () => p1.popped, hint: () => ({ mode: 'pop', p: p1 }) },
+    { txt: 'Pinch the hair tip, then pull', done: () => h1.pulled, hint: () => ({ mode: 'pull', h: h1 }) },
+    { txt: 'Squeeze the dark dot and hold', done: () => bh.popped, hint: () => ({ mode: 'pop', p: bh }) },
+    { txt: 'This bump hides a hair. Pop it!', done: () => ing.popped, hint: () => ({ mode: 'pop', p: ing }) },
+    { txt: 'Pull the hair. If it sticks, keep pulling!', done: () => ih.pulled, hint: () => ({ mode: 'pull', h: ih }) },
+  ] };
+}
+function updateTutorial() {
+  if (!tutorial || state !== 'play') return;
+  const i = tutorial.steps.findIndex(st => !st.done());
+  if (i === tutorial.i) return;
+  if (tutorial.i >= 0) SFX.collect(3);
+  tutorial.i = i;
+  banner(i >= 0 ? `${i + 1}/${tutorial.steps.length} · ${tutorial.steps[i].txt}` : null);
+}
+function newHair(o) {
+  return Object.assign({ ang: 0, len: .18, curl: 1, ph: rand(0, TAU), wx: 0, wv: 0, tension: 0, pulled: false, grip: null, tough: false }, hairLook(), o);
+}
 function newPimple(nx, ny, size, kind) {
   size *= rand(.92, 1.1);
   const look = { pal: pick(PIMPLE_PALS), ar: rand(.86, 1.15), rot: rand(0, TAU), hx: rand(-.15, .15), hy: rand(-.22, .05), hs: rand(.8, 1.22), twin: Math.random() < .18 ? rand(0, TAU) : null };
-  return { nx, ny, size, kind, look, pressure: 0, hold: 0, popped: false, mark: 0, axis: 0, w: 0, wv: 0, ph: rand(0, TAU), tick: 0 };
+  return { nx, ny, size, kind, look, pressure: 0, hold: 0, ext: 0, popped: false, mark: 0, axis: 0, w: 0, wv: 0, ph: rand(0, TAU), tick: 0 };
 }
-const holdNeed = p => p.kind === 'big' ? .55 : p.kind === 'ingrown' ? .5 : p.kind === 'gold' ? .3 : .06;
+const holdNeed = p => p.kind === 'blackhead' ? 99 : p.kind === 'big' ? .55 : p.kind === 'ingrown' ? .5 : p.kind === 'gold' ? .3 : .06;
 
 /* ---------- positions ---------- */
 function pimplePos(p) { return { x: hx(p.nx), y: hy(p.ny) }; }
@@ -656,8 +827,11 @@ function startSqueeze(p, ids, d, axis, src) {
 }
 function startHair(h, ids, mx, my, d, src) {
   const F = hairFoll(h);
-  action = { type: 'hair', h, ids, d0: d, src, startDist: dist(mx, my, F.x, F.y), loop: SFX.loop('hair'), vx: 0, vy: 0, px: mx, py: my, tickN: 0 };
-  h.grip = { x: mx, y: my }; h.tension = 0;
+  const group = h.cluster ? hairs.filter(o => o.cluster === h.cluster && !o.pulled && distToHair(o, mx, my) < 55 * Math.max(S, .8)) : [h];
+  if (!group.includes(h)) group.unshift(h);
+  action = { type: 'hair', h, group, ids, d0: d, src, startDist: dist(mx, my, F.x, F.y), loop: SFX.loop('hair'), vx: 0, vy: 0, px: mx, py: my, tickN: 0 };
+  group.forEach((o, i) => { o.grip = { x: mx, y: my }; o.tension = 0; o.gOff = (i - (group.length - 1) / 2) * 7; });
+  if (group.length > 1) addText(group.length === 3 ? 'triple grip!' : 'double grip!', mx, my - 44, '#6fcfa6', 20);
   SFX.click(); buzz(10);
   ids.forEach(id => { const q = pointers.get(id); if (q) q.used = true; });
   setExpr('nervous', 99);
@@ -674,6 +848,7 @@ function endAction(success) {
       p.hold = 0;
     } else {
       const h = action.h;
+      for (const o of action.group || []) if (o !== h) o.grip = null;
       if (h.tension > .12) {
         h.wv += 10 + h.tension * 14; SFX.slip(); slips++; buzz(15);
         const F = hairFoll(h); addText('oops!', F.x, F.y - 34 * S, '#c39a7c', 22);
@@ -727,6 +902,17 @@ function updateAction(dt) {
     else target = clamp(action.t * 2.4, 0, 1);
     p.pressure += (target - p.pressure) * Math.min(1, dt * 22);
     if (p.pressure > .86) p.hold += dt; else p.hold = Math.max(0, p.hold - dt * 1.5);
+    if (p.kind === 'blackhead') {
+      // keep squeezing: the plug slowly squeezes out like toothpaste
+      if (p.pressure > .5) p.ext = Math.min(1, p.ext + dt * (.45 + p.pressure * .55));
+      action.loop.set(p.pressure, p.ext);
+      const en = Math.floor(p.ext * 10);
+      if (en > p.tick) { buzz(5); SFX.tick(.3 + p.ext * .7); }
+      p.tick = en;
+      setExpr(p.pressure > .55 ? 'wince' : 'nervous', 99);
+      if (p.ext >= 1) popPimple(p);
+      return;
+    }
     const need = holdNeed(p), hf = clamp(p.hold / need, 0, 1);
     action.loop.set(p.pressure, p.kind === 'small' ? 0 : hf);
     const stepN = Math.floor(p.pressure * 5) + Math.floor(hf * 4) * 2;
@@ -740,7 +926,7 @@ function updateAction(dt) {
     if (action.src === 'touch' && d > Math.max(action.d0 * 1.9, action.d0 + 80)) { endAction(false); return; }
     const vx = (mx - action.px) / Math.max(dt, .001), vy = (my - action.py) / Math.max(dt, .001);
     action.vx = lerp(action.vx, vx, .3); action.vy = lerp(action.vy, vy, .3); action.px = mx; action.py = my;
-    const pullLen = Math.max(80, head.r * (h.ingrown ? .72 : h.tough ? .62 : .48));
+    const pullLen = Math.max(80, head.r * (h.ingrown ? .72 : h.long ? .56 : h.tough ? .62 : .48)) * (1 + .15 * (action.group.length - 1));
     let target = clamp((dist(mx, my, F.x, F.y) - action.startDist) / pullLen, 0, 1);
     let stuckK = 0;
     if (h.ingrown && !h.freed) {
@@ -764,12 +950,23 @@ function updateAction(dt) {
     h.tension = lerp(h.tension, target, Math.min(1, dt * 25));
     const jit = stuckK * 3.5 * S;
     h.grip = { x: mx + rand(-jit, jit), y: my + rand(-jit, jit) };
+    const gdx = mx - F.x, gdy = my - F.y, gl = Math.hypot(gdx, gdy) || 1;
+    for (const o of action.group) if (o !== h) { o.tension = h.tension; o.grip = { x: h.grip.x - gdy / gl * o.gOff, y: h.grip.y + gdx / gl * o.gOff }; }
     action.loop.set(Math.min(1, h.tension + stuckK * .5));
     const tn = Math.floor(h.tension * 6);
     if (tn > action.tickN) { buzz(5 + tn * 2); SFX.tick(h.tension * .6); }
     action.tickN = tn;
     setExpr(h.tension > .45 ? 'ouch' : 'nervous', 99);
-    if (target >= .995) pluckHair(h, action.vx, action.vy);
+    if (target >= .995) {
+      if (h.long && !h.stage) {
+        // the long one only comes halfway: let go and grab it again
+        h.stage = 1; h.len *= 1.3; h.tension = 0; h.grip = null; h.wv += 10;
+        endAction(true);
+        addText('halfway! grab it again', F.x, F.y - 40 * S, '#6fcfa6', 22);
+        SFX.pop(.8, 'small'); buzz([15, 20]); wob.v += 4; shake = 5;
+        burst(F.x, F.y, 6, ['sparkle', 'dot'], ['#fff', '#b8e8d0'], 200);
+      } else pluckHair(h, action.vx, action.vy);
+    }
   }
 }
 
@@ -785,9 +982,9 @@ function popPimple(p) {
   endAction(true);
   p.popped = true; p.mark = 1; p.pressure = 0;
   const mult = bumpCombo();
-  const base = p.kind === 'big' ? 25 : p.kind === 'ingrown' ? 30 : p.kind === 'gold' ? 60 : 10;
+  const base = p.kind === 'big' ? 25 : p.kind === 'ingrown' ? 30 : p.kind === 'gold' ? 60 : p.kind === 'blackhead' ? 20 : 10;
   const pts = base * mult;
-  const big = p.kind !== 'small';
+  const big = p.kind !== 'small' && p.kind !== 'blackhead';
   hitstop = big ? .1 : .055; shake = big ? 13 : 7; flash = big ? .22 : .1;
   wob.v += big ? 9 : 5;
   // FX
@@ -796,7 +993,11 @@ function popPimple(p) {
   const cols = p.kind === 'gold' ? ['#ffd65c', '#fff3b0', '#ffb94a', '#fff'] : ['#ff9fb8', '#ffc2d1', '#fff', '#ffe17a', '#b8e8d0'];
   burst(P.x, P.y, big ? 20 : 11, ['heart', 'star', 'dot', 'sparkle'], cols, big ? 520 : 380);
   burst(P.x, P.y, big ? 6 : 6, ['foam'], ['#fffaf0'], 220);
-  const nStars = big ? 6 : 3;
+  if (p.kind === 'blackhead') {
+    const D = plugDir(p), L = R * 3.4;
+    flyers.push({ kind: 'plug', x: P.x + D.x * L, y: P.y + D.y * L, vx: D.x * 280 + rand(-80, 80), vy: D.y * 280 - 380, t: 0, home: .8, val: pts, rot: Math.atan2(D.y, D.x) + Math.PI / 2, vr: rand(-7, 7), L, R });
+  }
+  const nStars = p.kind === 'blackhead' ? 0 : big ? 6 : 3;
   for (let i = 0; i < nStars; i++) flyers.push({ kind: 'star', x: P.x, y: P.y, vx: rand(-260, 260), vy: rand(-520, -220), t: 0, home: .45 + i * .05, val: pts / nStars, rot: rand(0, TAU), col: p.kind === 'gold' ? '#ffd65c' : pick(['#ffd65c', '#ff9fb8', '#9fdcc0']) });
   if (p.kind === 'big' || p.kind === 'ingrown') {
     // ...and a splat or two right on the camera lens
@@ -805,7 +1006,7 @@ function popPimple(p) {
     setTimeout(() => { SFX.splat(); buzz([10, 15, 30]); }, 120);
     setTimeout(() => SFX.squirt(), 20);
   }
-  const word = combo >= 3 ? `Combo x${combo}!` : p.kind === 'gold' ? 'Golden!' : p.kind === 'ingrown' ? 'Pop!' : big ? 'BIG POP!' : pick(WORD_POP);
+  const word = combo >= 3 ? `Combo x${combo}!` : p.kind === 'gold' ? 'Golden!' : p.kind === 'ingrown' ? 'Pop!' : p.kind === 'blackhead' ? pick(['Plop!', 'Squeaky clean!', 'Plip!']) : big ? 'BIG POP!' : pick(WORD_POP);
   if (p.kind === 'ingrown') {
     const ih = hairs.find(h => h.pimple === p);
     if (ih) {
@@ -815,7 +1016,7 @@ function popPimple(p) {
   }
   addText(word, P.x, P.y - R * 2, p.kind === 'gold' ? '#f0a92a' : '#ff7f9e', big || combo >= 3 ? 34 : 28);
   // sound + haptic
-  SFX.pop(1 + Math.min(combo - 1, 6) * .06, p.kind);
+  if (p.kind === 'blackhead') SFX.plop(); else SFX.pop(1 + Math.min(combo - 1, 6) * .06, p.kind);
   SFX.sparkle(combo - 1);
   buzz(big ? [30, 30, 50] : 22);
   setExpr('happy', 1.1);
@@ -826,16 +1027,22 @@ function popPimple(p) {
 }
 function pluckHair(h, vx, vy) {
   const F = h.ingrown ? hairPts(h, INGROWN_N)[INGROWN_EXIT] : hairFoll(h), G = h.grip || F;
+  const group = (action && action.group) || [h];
   endAction(true);
-  h.pulled = true; h.tension = 0;
   const mult = bumpCombo();
-  const pts = (h.ingrown ? 50 : h.tough ? 40 : 20) * mult;
+  const pts = (h.ingrown ? 50 : h.long ? 35 : h.tough ? 40 : 20) * mult * (group.length > 1 ? 1.5 : 1);
+  for (const o of group) if (o !== h) {
+    const OG = o.grip || G, oa = Math.atan2(OG.y - F.y, OG.x - F.x);
+    o.pulled = true; o.tension = 0;
+    flyers.push({ kind: 'hair', x: OG.x, y: OG.y, vx: clamp(vx * .35, -700, 700) + Math.cos(oa) * 250 + rand(-120, 120), vy: Math.min(clamp(vy * .35, -900, 500), 0) - 420 - rand(0, 150), t: 0, home: .9, val: pts, rot: oa + Math.PI / 2, vr: rand(-9, 9), h: { len: o.len, curl: o.curl, col: o.col, waves: o.waves, amp: o.amp, thick: o.thick, rootK: o.rootK, rootPal: o.rootPal } });
+  }
+  h.pulled = true; h.tension = 0;
   hitstop = .11; shake = 10; flash = .15; wob.v += 7;
   ring(F.x, F.y, 70 * S, '#fff');
   burst(F.x, F.y, 14, ['sparkle', 'star', 'dot', 'heart'], ['#fff', '#ffe17a', '#ffc2d1', '#b8e8d0'], 420);
   const ang = Math.atan2(G.y - F.y, G.x - F.x);
   flyers.push({ kind: 'hair', x: G.x, y: G.y, vx: clamp(vx * .35, -700, 700) + Math.cos(ang) * 250, vy: Math.min(clamp(vy * .35, -900, 500), 0) - 420, t: 0, home: .85, val: pts, rot: ang + Math.PI / 2, vr: rand(-9, 9), h: { len: h.len, curl: h.curl, col: h.col, waves: h.waves, amp: h.amp, thick: h.thick, rootK: h.rootK * (h.ingrown ? 1.15 : 1), rootPal: h.rootPal } });
-  addText(combo >= 3 ? `Combo x${combo}!` : h.ingrown ? 'Ingrown out!' : h.tough ? 'Mighty pluck!' : 'Pluck!', F.x, F.y - 40 * S, '#6fcfa6', 30);
+  addText(group.length === 3 ? 'Triple pluck!' : group.length === 2 ? 'Double pluck!' : combo >= 3 ? `Combo x${combo}!` : h.ingrown ? 'Ingrown out!' : h.long ? 'Sooo long!' : h.tough ? 'Mighty pluck!' : 'Pluck!', F.x, F.y - 40 * S, '#6fcfa6', 30);
   SFX.pluck(); setTimeout(() => SFX.sparkle(combo), 60);
   buzz([15, 25, 45]);
   setExpr('ouch', .35); setTimeout(() => { if (expr === 'ouch') setExpr('happy', 1); }, 350);
@@ -846,7 +1053,7 @@ function pluckHair(h, vx, vy) {
 }
 function checkClear() {
   updateHud();
-  if (pimples.every(p => p.popped) && hairs.every(h => h.pulled)) clearedT = 1.1;
+  if (pimples.every(p => p.popped) && hairs.every(h => h.pulled) && clearedT < 0) clearedT = mode === 'rush' ? .45 : 1.1;
 }
 function doWin() {
   state = 'win';
@@ -859,6 +1066,19 @@ function doWin() {
   ring(hx(0), hy(0), head.r * 2.2, '#fff');
   say('I feel so glowy~ ✨', 3);
   const stars = slips <= 1 ? 3 : slips <= 3 ? 2 : 1;
+  // sticker for this client, plus anything it unlocks
+  const isNew = !save.stickers[client.name], hadPage2 = page2Open();
+  save.stickers[client.name] = (save.stickers[client.name] || 0) + 1;
+  const unlocks = [];
+  if (isNew) {
+    const pat = PATTERNS.find(pt => pt.need === stickerCount());
+    if (!hadPage2 && page2Open()) unlocks.push('6 new clients');
+    if (pat) unlocks.push(pat.name);
+  }
+  $('#stickerImg').src = portraitURL(client);
+  $('#stickerTxt').textContent = isNew ? 'New sticker!' : `Sticker ×${save.stickers[client.name]}`;
+  $('#unlockTxt').textContent = unlocks.length ? `Unlocked: ${unlocks.join(' + ')}!` : isNew ? `${stickerCount()} of ${CLIENTS.length} collected` : '';
+  if (tutorial) { save.tutDone = true; tutorial = null; }
   save.level++; persist();
   $('#winMsg').textContent = `${client.name} feels brand new!`;
   $('#winScore').textContent = `+${levelScore}`;
@@ -869,6 +1089,141 @@ function doWin() {
     ss.forEach((s, i) => setTimeout(() => { s.classList.add('show'); if (i < stars) { s.classList.add('on'); SFX.star(i); buzz(15); } else SFX.click(); }, 350 + i * 260));
   }, 1300);
 }
+/* ---------- glow cream finish: swipe to spread it over the face ---------- */
+function startFinish() {
+  state = 'finish';
+  creamCv.width = Math.round(W * DPR); creamCv.height = Math.round(H * DPR);
+  cctx.setTransform(DPR, 0, 0, DPR, 0, 0); cctx.clearRect(0, 0, W, H);
+  const cells = [];
+  for (let y = -.4; y <= .86; y += .13) for (let x = -.86; x <= .86; x += .13) if (x * x + (y / .92) * (y / .92) < .64) cells.push({ x, y, on: false });
+  finish = { cells, n: 0, done: false, fade: 1, sw: 0 };
+  banner('Swipe to spread the glow cream ✨');
+  say('Cream time~', 1.8); SFX.boing(.2); setExpr('happy', 1.2);
+  updateHud();
+}
+function updateFinish(dt) {
+  if (finish.done) return;
+  for (const p of pointers.values()) {
+    if (p.lx == null) continue;
+    const dx = p.x - p.lx, dy = p.y - p.ly, L = Math.hypot(dx, dy);
+    if (L < 1 || (!inHead(p.x, p.y) && !inHead(p.lx, p.ly))) continue;
+    cctx.lineCap = 'round'; cctx.strokeStyle = 'rgba(255,251,243,.9)'; cctx.lineWidth = 44 * Math.max(S, .8);
+    cctx.beginPath(); cctx.moveTo(p.lx, p.ly); cctx.lineTo(p.x, p.y); cctx.stroke();
+    for (let s = 0; s <= L; s += 6) {
+      const nx = (p.lx + dx * s / L - hx(0)) / head.r, ny = (p.ly + dy * s / L - hy(0)) / head.r;
+      for (const c of finish.cells) if (!c.on && dist(nx, ny, c.x, c.y) < .14) { c.on = true; finish.n++; }
+    }
+    finish.sw += L;
+    if (finish.sw > 70) { finish.sw = 0; SFX.swish(); buzz(4); burst(p.x, p.y, 1, ['sparkle'], ['#fff', '#ffe17a'], 80); }
+  }
+  updateHud();
+  if (finish.n / finish.cells.length >= .82) {
+    finish.done = true; banner(null);
+    burst(hx(0), hy(0), 16, ['sparkle', 'heart'], ['#fff', '#ffe17a', '#ff9fb8'], 420);
+    doWin();
+  }
+}
+/* swipe across the screen to wipe the cream splashes off the glass */
+function wipeSplats() {
+  squeakT -= 1 / 60;
+  for (const p of pointers.values()) {
+    if (p.lx == null) continue;
+    const dx = p.x - p.lx, dy = p.y - p.ly, L = Math.hypot(dx, dy);
+    if (L < 3) continue;
+    for (const q of splats) {
+      if (q.t < .05 || q.wipeT != null) continue;
+      // distance from splat centre to the finger's path this frame
+      const t = clamp(((q.x - p.lx) * dx + (q.y - p.ly) * dy) / (L * L), 0, 1);
+      if (dist(q.x, q.y, p.lx + dx * t, p.ly + dy * t) < q.r * 1.1) {
+        q.wipeT = q.t; q.wdx = dx / L; q.wdy = dy / L; q.life = Math.min(q.life, q.t + .3);
+        if (squeakT <= 0) { SFX.squeegee(); squeakT = .12; }
+        buzz(6);
+      }
+    }
+  }
+}
+/* ---------- sticker portraits: draw a client into a little canvas ---------- */
+const portraitCache = {};
+function renderPortrait(c, px) {
+  const can = document.createElement('canvas'); can.width = can.height = px;
+  const keep = { ctx, client, pimples, hairs, winGlow, expr, S, hx, hy, blinkP, finish, towelPattern, lx: look.x, ly: look.y, wx: wob.x, cx: head.cx, cy: head.cy, r: head.r };
+  try {
+    ctx = can.getContext('2d');
+    head.cx = px / 2; head.cy = px * .62; head.r = px * .29; S = head.r / 170;
+    hx = n => head.cx + n * head.r; hy = n => head.cy + n * head.r;
+    client = c; pimples = []; hairs = []; winGlow = 0; expr = 'happy'; blinkP = 0; finish = null; towelPattern = 'plain'; look.x = 0; look.y = .2; wob.x = 0;
+    const g = ctx.createLinearGradient(0, 0, 0, px); g.addColorStop(0, c.bg[0]); g.addColorStop(1, c.bg[1]);
+    ctx.fillStyle = g; ctx.fillRect(0, 0, px, px);
+    drawCharacter();
+  } finally {
+    ({ ctx, client, pimples, hairs, winGlow, expr, S, hx, hy, blinkP, finish, towelPattern } = keep);
+    look.x = keep.lx; look.y = keep.ly; wob.x = keep.wx; head.cx = keep.cx; head.cy = keep.cy; head.r = keep.r;
+  }
+  return can;
+}
+function portraitURL(c) { return portraitCache[c.name] || (portraitCache[c.name] = renderPortrait(c, Math.round(110 * Math.min(DPR, 2))).toDataURL()); }
+
+let bookPage = 0;
+function renderBook() {
+  const page = CLIENTS.slice(bookPage * 6, bookPage * 6 + 6), locked = bookPage === 1 && !page2Open();
+  $('#pageName').textContent = bookPage ? 'Page 2 · new friends' : 'Page 1 · regulars';
+  $('#grid').innerHTML = page.map(c => {
+    const n = save.stickers[c.name] || 0;
+    return `<div class="stk ${n ? '' : 'locked'}"><img src="${portraitURL(c)}" alt="${n ? c.name : 'Not collected yet'}"><span>${n ? c.name : '???'}</span><i>${n > 1 ? 'visited ' + n + ' times' : n ? 'visited once' : ''}</i></div>`;
+  }).join('') + (locked ? '<div class="lockmsg">🔒 Collect all 6 stickers on page 1 to meet new friends</div>' : '');
+  $('#unlocks').innerHTML = '<b>Towel patterns</b><br>' + PATTERNS.map(pt => `${stickerCount() >= pt.need ? '✅' : '🔒'} ${pt.name} <span style="opacity:.6">(${pt.need} stickers)</span>`).join('<br>');
+  $('#pgPrev').style.visibility = bookPage ? 'visible' : 'hidden';
+  $('#pgNext').style.visibility = bookPage ? 'hidden' : 'visible';
+}
+function updateTitle() { $('#stickerN').textContent = `${stickerCount()}/${CLIENTS.length}`; }
+function hideScreens() { ['#win', '#book', '#rushOver'].forEach(q => $(q).classList.add('hide')); }
+
+/* ---------- rush hour: as many clients as you can before the clock runs out ---------- */
+function startRush() {
+  SFX.init(); SFX.click(); SFX.whoosh(); buzz(15);
+  hideScreens(); $('#title').classList.add('hide'); $('#hud').classList.remove('off');
+  mode = 'rush'; rush = { t: 60, served: 0, score: 0, sec: 99 };
+  genLevel(3, { rush: true }); buildBg(); particles = [];
+  state = 'trans'; exitT = -1; enterT = 0; offX = W * 1.2;
+  toast('Pamper as many clients as you can in 60s!');
+  updateHud(); refreshScoreTarget();
+}
+function updateRushClock(dt) {
+  if (mode !== 'rush' || !rush || (state !== 'play' && state !== 'trans')) return;
+  rush.t -= dt;
+  const sec = Math.ceil(rush.t);
+  if (sec !== rush.sec) { rush.sec = sec; updateHud(); if (sec <= 5 && sec > 0) { SFX.tickTimer(sec <= 3); buzz(10); } }
+  if (rush.t <= 0) endRush();
+}
+function rushNext() {
+  rush.served++; rush.t += 10;
+  addText('+10s!', W / 2, hy(-.75), '#6fcfa6', 32);
+  SFX.star(2); buzz(20); updateHud();
+  state = 'trans'; exitT = 0;
+}
+function endRush() {
+  state = 'rushover'; endAction(false); banner(null);
+  for (const f of flyers) { rush.score += Math.round(f.val); save.total += Math.round(f.val); } flyers = []; updateHud();
+  const best = rush.score > save.rushBest;
+  save.rushBest = Math.max(save.rushBest, rush.score); persist();
+  $('#rushMsg').textContent = `You pampered ${rush.served} client${rush.served === 1 ? '' : 's'}`;
+  $('#rushScore').textContent = `⭐ ${rush.score}`;
+  $('#rushBest').textContent = best && rush.score > 0 ? 'New best score! 🎉' : `Best: ${save.rushBest}`;
+  SFX.win(); buzz([20, 40, 60]);
+  setTimeout(() => $('#rushOver').classList.remove('hide'), 500);
+}
+function goHome() {
+  SFX.click(); endAction(false); hideScreens(); banner(null);
+  $('#hud').classList.add('off'); $('#title').classList.remove('hide');
+  if (mode === 'rush' || ['win', 'finish', 'trans', 'rushover'].includes(state)) { mode = 'relax'; rush = null; genLevel(save.level); buildBg(); }
+  if (tutorial) tutorial.i = -1;
+  offX = 0; enterT = 1; exitT = -1; state = 'title'; updateTitle(); updateHud();
+}
+function shownScoreValue() { return mode === 'rush' && rush ? rush.score : save.total; }
+function refreshScoreTarget() { setTimeout(() => { const r = $('#score').getBoundingClientRect(); scoreTarget = { x: r.left + r.width / 2, y: r.top + r.height / 2 }; }, 600); }
+
+function banner(txt) { const b = $('#banner'); if (txt) { b.textContent = txt; b.classList.remove('hide'); } else b.classList.add('hide'); }
+
 function nextClient() {
   SFX.click(); SFX.whoosh();
   $('#win').classList.add('hide');
@@ -901,10 +1256,10 @@ function update(dt) {
   // transitions
   if (state === 'trans') {
     if (exitT >= 0) {
-      exitT += dt / .45; offX = -easeInBack(Math.min(exitT, 1)) * W * 1.2;
-      if (exitT >= 1) { exitT = -1; genLevel(save.level); buildBg(); enterT = 0; particles = []; }
+      exitT += dt / (mode === 'rush' ? .3 : .45); offX = -easeInBack(Math.min(exitT, 1)) * W * 1.2;
+      if (exitT >= 1) { exitT = -1; if (mode === 'rush') genLevel(3 + rush.served, { rush: true }); else genLevel(save.level); buildBg(); enterT = 0; particles = []; }
     } else if (enterT < 1) {
-      enterT = Math.min(1, enterT + dt / .9); offX = (1 - easeOutBack(enterT)) * W * 1.2;
+      enterT = Math.min(1, enterT + dt / (mode === 'rush' ? .55 : .9)); offX = (1 - easeOutBack(enterT)) * W * 1.2;
       if (enterT >= 1) { state = 'play'; offX = 0; wob.v += 8; SFX.boing(.2); say(pick(SAY_HI).replace('{n}', client.name), 2); SFX.giggle(); }
     }
   }
@@ -924,7 +1279,13 @@ function update(dt) {
   // combo
   if (comboT > 0) comboT -= dt;
   // clear check
-  if (clearedT > 0 && state === 'play' && !action) { clearedT -= dt; if (clearedT <= 0) doWin(); }
+  if (clearedT > 0 && state === 'play' && !action) { clearedT -= dt; if (clearedT <= 0) { if (mode === 'rush') rushNext(); else startFinish(); } }
+  if (state === 'finish') updateFinish(dt);
+  updateTutorial();
+  updateRushClock(dt);
+  if (finish && finish.done) finish.fade = Math.max(0, finish.fade - dt * 1.1);
+  wipeSplats();
+  for (const p of pointers.values()) { p.lx = p.x; p.ly = p.y; }
   if (winGlow > 0) winGlow = Math.min(1, winGlow + dt * .8);
 
   // look target
@@ -939,13 +1300,13 @@ function update(dt) {
   // pimples
   for (const p of pimples) {
     p.wv += (-260 * p.w - 9 * p.wv) * dt; p.w += p.wv * dt;
-    if (!action || action.p !== p) { p.pressure *= Math.exp(-dt * 10); p.hold = Math.max(0, p.hold - dt * 3); p.tick = 0; }
+    if (!action || action.p !== p) { p.pressure *= Math.exp(-dt * 10); p.hold = Math.max(0, p.hold - dt * 3); p.tick = 0; if (!p.popped) p.ext = Math.max(0, p.ext - dt * .3); }
     if (p.popped && p.mark > 0) p.mark -= dt * .6;
     if (!p.popped && p.kind === 'gold' && Math.random() < dt * 3) { const P = pimplePos(p); burst(P.x + rand(-12, 12) * S, P.y + rand(-12, 12) * S, 1, ['sparkle'], ['#fff', '#ffe17a'], 20); }
   }
   for (const h of hairs) {
     h.wv += (-180 * h.wx - 6 * h.wv) * dt; h.wx += h.wv * dt;
-    if (!action || action.h !== h) h.tension *= Math.exp(-dt * 14);
+    if (!action || !(action.group || [action.h]).includes(h)) h.tension *= Math.exp(-dt * 14);
   }
 
   // particles
@@ -979,7 +1340,7 @@ function update(dt) {
       const k = Math.min(1, (f.t - f.home) * 3.2); const e = k * k;
       f.x = lerp(f.x, scoreTarget.x, e * .5 + .05); f.y = lerp(f.y, scoreTarget.y, e * .5 + .05); f.rot += 10 * dt;
       if (dist(f.x, f.y, scoreTarget.x, scoreTarget.y) < 14) {
-        flyers.splice(i, 1); levelScore += Math.round(f.val); save.total += Math.round(f.val);
+        flyers.splice(i, 1); levelScore += Math.round(f.val); save.total += Math.round(f.val); if (mode === 'rush' && rush) rush.score += Math.round(f.val);
         SFX.collect(i); bumpScore(); persist();
       }
     }
@@ -990,18 +1351,23 @@ function update(dt) {
   if (speech) { speech.t += dt; if (speech.t > speech.life) speech = null; }
   shake *= Math.exp(-dt * 12); flash *= Math.exp(-dt * 9);
   // hint timer
-  if (state === 'play' && !action && enterT >= 1) idleT += dt; else idleT = 0;
+  if ((state === 'play' || state === 'finish') && !action && !pointers.size && enterT >= 1) idleT += dt; else idleT = 0;
 }
 function bumpScore() {
   const el = $('#score'); el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump');
-  $('#scoreN').textContent = save.total;
+  $('#scoreN').textContent = shownScoreValue();
 }
 function updateHud() {
   const total = pimples.length + hairs.length || 1;
   const done = pimples.filter(p => p.popped).length + hairs.filter(h => h.pulled).length;
-  $('#bar').style.width = `calc(${(done / total) * 100}% - ${done / total * 6}px)`;
-  $('#who').innerHTML = `${client.name} <small>#${save.level}</small>`;
-  $('#scoreN').textContent = save.total;
+  const k = state === 'finish' && finish ? Math.min(1, finish.n / finish.cells.length / .82) : done / total;
+  $('#bar').style.width = `calc(${k * 100}% - ${k * 6}px)`;
+  $('#bar').classList.toggle('cream', state === 'finish');
+  if (mode === 'rush' && rush) {
+    $('#who').innerHTML = `⏱ ${Math.max(0, Math.ceil(rush.t))}s <small>· ${rush.served} done</small>`;
+    $('#who').classList.toggle('warn', rush.t <= 10);
+  } else { $('#who').innerHTML = tutorial ? `${client.name} <small>· tutorial</small>` : `${client.name} <small>#${save.level}</small>`; $('#who').classList.remove('warn'); }
+  $('#scoreN').textContent = shownScoreValue();
 }
 
 /* ============================================================
@@ -1106,9 +1472,17 @@ function drawCharacter() {
   for (const h of hairs) if (!h.pulled && !h.hidden) drawHair(h);
   for (const p of pimples) if (!p.popped) drawPimple(p);
 
+  // --- glow cream being spread
+  if (finish && finish.fade > 0 && creamCv.width) {
+    ctx.save(); ell(cx, cy, rx, ry); ctx.clip();
+    ctx.globalAlpha = finish.fade * .92; ctx.drawImage(creamCv, 0, 0, W, H);
+    ctx.globalAlpha = 1; ctx.restore();
+    drawEyes(c); drawMouth(c);
+  }
   // --- towel
   drawTowel(c, lw);
   if (c.ears === 'sprout') drawSprout(c, lw);
+  if (c.ears === 'tuft') drawTuft(c, lw);
 
   // --- sweat drop
   if (expr === 'ouch' || expr === 'wince') {
@@ -1146,6 +1520,31 @@ function drawEars(c, lw) {
     ell(hx(s * .8), hy(-.95), r * .27, r * .27); ctx.fillStyle = c.skin; ctx.fill(); ctx.stroke();
     ell(hx(s * .82), hy(-.97), r * .15, r * .15); ctx.fillStyle = c.earIn; ctx.fill();
   });
+  if (c.ears === 'frog') ear(s => {
+    ell(hx(s * .6), hy(-1.16), r * .34, r * .32); ctx.fillStyle = c.skin; ctx.fill(); ctx.stroke();
+    ell(hx(s * .6), hy(-1.24), r * .19, r * .15); ctx.fillStyle = c.earIn; ctx.fill();
+  });
+  if (c.ears === 'round') ear(s => {
+    ell(hx(s * .8), hy(-.95), r * .27, r * .27); ctx.fillStyle = c.earCol; ctx.fill(); ctx.strokeStyle = c.earCol; ctx.stroke(); ctx.strokeStyle = c.line;
+  });
+  if (c.ears === 'pig') ear(s => {
+    ctx.beginPath(); ctx.moveTo(hx(s * .45), hy(-.95)); ctx.quadraticCurveTo(hx(s * .9), hy(-1.35), hx(s * 1.12), hy(-1.0)); ctx.quadraticCurveTo(hx(s * .98), hy(-.7), hx(s * .85), hy(-.55)); ctx.closePath();
+    ctx.fillStyle = c.skin; ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(hx(s * .62), hy(-.92)); ctx.quadraticCurveTo(hx(s * .92), hy(-1.2), hx(s * 1.02), hy(-.98)); ctx.quadraticCurveTo(hx(s * .93), hy(-.8), hx(s * .85), hy(-.7)); ctx.closePath(); ctx.fillStyle = c.earIn; ctx.fill();
+  });
+  if (c.ears === 'puffs' || c.ears === 'lamb') {
+    const n = c.ears === 'lamb' ? 9 : 11, a0 = c.ears === 'lamb' ? Math.PI * 1.05 : Math.PI * .8, a1 = c.ears === 'lamb' ? Math.PI * 1.95 : Math.PI * 2.2;
+    for (let i = 0; i < n; i++) {
+      const a = lerp(a0, a1, i / (n - 1)), pr = r * (.24 + (i % 2) * .05);
+      ell(hx(Math.cos(a) * 1.02), hy(Math.sin(a) * .98), pr, pr); ctx.fillStyle = c.puffCol; ctx.fill(); ctx.stroke();
+    }
+    for (let i = 0; i < n; i++) { const a = lerp(a0, a1, i / (n - 1)), pr = r * (.24 + (i % 2) * .05) - 2; ell(hx(Math.cos(a) * 1.02), hy(Math.sin(a) * .98), pr, pr); ctx.fillStyle = c.puffCol; ctx.fill(); }
+    if (c.ears === 'lamb') ear(s => {
+      ctx.save(); ctx.translate(hx(s * 1.02), hy(-.2)); ctx.rotate(s * .5);
+      ell(0, 0, r * .3, r * .14); ctx.fillStyle = c.skin; ctx.fill(); ctx.stroke(); ell(0, 0, r * .18, r * .07); ctx.fillStyle = c.earIn; ctx.fill();
+      ctx.restore();
+    });
+  }
   if (c.ears === 'mouse') ear(s => {
     ell(hx(s * 1.02), hy(-.62), r * .38, r * .38); ctx.fillStyle = c.skin; ctx.fill(); ctx.stroke();
     ell(hx(s * 1.04), hy(-.62), r * .24, r * .24); ctx.fillStyle = c.earIn; ctx.fill();
@@ -1160,6 +1559,13 @@ function drawSprout(c, lw) {
   ctx.restore();
 }
 
+function drawTuft(c, lw) {
+  const r = head.r;
+  ctx.save(); ctx.translate(hx(.05), hy(-1.18)); ctx.rotate(Math.sin(time * 3) * .1 + wob.x * .1);
+  ctx.strokeStyle = c.earIn; ctx.lineWidth = lw * 1.6; ctx.lineCap = 'round';
+  for (let i = -1; i <= 1; i++) { ctx.beginPath(); ctx.moveTo(0, 0); ctx.quadraticCurveTo(i * r * .14, -r * .22, i * r * .2 + r * .06, -r * .16); ctx.stroke(); }
+  ctx.restore();
+}
 function drawTowel(c, lw) {
   ctx.beginPath();
   ctx.moveTo(hx(-1.05), hy(-.3));
@@ -1174,6 +1580,21 @@ function drawTowel(c, lw) {
   ctx.strokeStyle = hexA(c.towelLine, .7); ctx.lineWidth = lw * .7;
   for (let i = 0; i < 4; i++) {
     ctx.beginPath(); ctx.moveTo(hx(-.9 + i * .4), hy(-.52)); ctx.quadraticCurveTo(hx(-.6 + i * .42), hy(-.9), hx(-.2 + i * .42), hy(-1.15)); ctx.stroke();
+  }
+  if (towelPattern !== 'plain') {
+    const step = head.r * .24;
+    ctx.fillStyle = 'rgba(255,255,255,.75)'; ctx.strokeStyle = 'rgba(255,255,255,.6)';
+    if (towelPattern === 'stripes') {
+      ctx.lineWidth = step * .28;
+      for (let x = hx(-1.6); x < hx(1.4); x += step) { ctx.beginPath(); ctx.moveTo(x, hy(-.3)); ctx.lineTo(x + head.r * .6, hy(-1.3)); ctx.stroke(); }
+    } else {
+      let row = 0;
+      for (let y = hy(-1.28); y < hy(-.3); y += step * .85, row++) for (let x = hx(-1.15) + (row % 2) * step / 2; x < hx(1.15); x += step) {
+        if (towelPattern === 'dots') { ell(x, y, step * .13, step * .13); ctx.fill(); }
+        else if (towelPattern === 'hearts') { heartPath(ctx, x, y, step * .2); ctx.fill(); }
+        else { starPath(ctx, x, y, step * .19); ctx.fill(); }
+      }
+    }
   }
   ctx.fillStyle = 'rgba(255,255,255,.45)'; ell(hx(-.45), hy(-.95), head.r * .28, head.r * .1, -.4); ctx.fill();
   ctx.restore();
@@ -1192,6 +1613,7 @@ function drawEyes(c) {
   const lx = look.x * er * .35, ly = look.y * er * .3;
   for (const s of [-1, 1]) {
     const ex = hx(s * .36), ey = hy(-.04);
+    if (c.patches) { ctx.fillStyle = c.patches; ell(ex + s * er * .15, ey + er * .15, er * 1.45, er * 1.2, -s * .45); ctx.fill(); }
     ctx.lineWidth = Math.max(3, er * .32); ctx.strokeStyle = ink; ctx.fillStyle = ink;
     if (expr === 'wince' || expr === 'ouch') {
       ctx.beginPath(); ctx.moveTo(ex - s * er * .6, ey - er * .55); ctx.lineTo(ex + s * er * .45, ey); ctx.lineTo(ex - s * er * .6, ey + er * .55); ctx.stroke();
@@ -1239,7 +1661,39 @@ function drawMouth(c) {
   }
 }
 
+function plugDir(p) { let dx = -Math.sin(p.axis), dy = Math.cos(p.axis); if (dy > 0) { dx = -dx; dy = -dy; } return { x: dx, y: dy }; }
+function drawPlug(x, y, dx, dy, len, R) {
+  const pts = [];
+  for (let i = 0; i <= 8; i++) { const s = i / 8, w = Math.sin(s * Math.PI * 1.5 + time * 3) * R * .25 * s; pts.push({ x: x + dx * len * s - dy * w, y: y + dy * len * s + dx * w }); }
+  ctx.lineCap = 'round';
+  ctx.strokeStyle = '#e6caa0'; ctx.lineWidth = R * 1.15 + 3; strokePts(pts);
+  ctx.strokeStyle = '#fff4dc'; ctx.lineWidth = R * 1.15; strokePts(pts);
+  ctx.strokeStyle = 'rgba(255,255,255,.9)'; ctx.lineWidth = R * .28; strokePts(pts.slice(1, 7).map(q => ({ x: q.x - R * .22 * (1 - Math.abs(dy)) - R * .2, y: q.y - R * .15 })));
+  const tip = pts[8];
+  ctx.fillStyle = '#5c3b52'; ell(tip.x, tip.y, R * .62, R * .62); ctx.fill();
+  ctx.fillStyle = 'rgba(255,255,255,.6)'; ell(tip.x - R * .2, tip.y - R * .22, R * .18, R * .18); ctx.fill();
+}
+function drawBlackhead(p) {
+  const P = pimplePos(p), R = p.size * head.r, pr = p.pressure, e = p.ext;
+  const jit = pr > .55 ? 1.2 * S : 0, x = P.x + rand(-jit, jit), y = P.y + rand(-jit, jit);
+  ctx.fillStyle = hexA(client.line, .14 + pr * .12); ell(x, y, R * 2, R * 2); ctx.fill();
+  const rr = R * 1.25 * (1 + pr * .18);
+  ctx.fillStyle = client.skin2; ell(x, y, rr, rr); ctx.fill(); ctx.strokeStyle = hexA(client.line, .55); ctx.lineWidth = Math.max(1.2, 1.6 * S); ctx.stroke();
+  if (pr > .05) {
+    ctx.strokeStyle = hexA(client.line, pr * .7); ctx.lineWidth = Math.max(1.4, 2 * S);
+    for (const sd of [-1, 1]) { const ax = Math.cos(p.axis) * sd, ay = Math.sin(p.axis) * sd, dd = R * (2.6 - pr * .8); ctx.beginPath(); ctx.arc(x + ax * dd, y + ay * dd, R * 1.1, p.axis + (sd < 0 ? 0 : Math.PI) - .9, p.axis + (sd < 0 ? 0 : Math.PI) + .9); ctx.stroke(); }
+  }
+  const D = plugDir(p), len = e * R * 3.4;
+  if (len > 1.5) drawPlug(x, y, D.x, D.y, len, R);
+  else { ctx.fillStyle = '#5c3b52'; ell(x, y, R * .58, R * .58); ctx.fill(); ctx.fillStyle = 'rgba(255,255,255,.55)'; ell(x - R * .18, y - R * .2, R * .17, R * .17); ctx.fill(); }
+  if (pr > .04 || e > .02) {
+    const ring = R * 3 + 6;
+    ctx.lineWidth = 5 * Math.max(S, .8); ctx.strokeStyle = 'rgba(255,255,255,.6)'; ell(P.x, P.y, ring, ring); ctx.stroke();
+    ctx.strokeStyle = '#c98bb2'; ctx.beginPath(); ctx.arc(P.x, P.y, ring, -Math.PI / 2, -Math.PI / 2 + TAU * e); ctx.stroke();
+  }
+}
 function drawPimple(p) {
+  if (p.kind === 'blackhead') return drawBlackhead(p);
   const P = pimplePos(p), R = p.size * head.r;
   const pr = p.pressure, hf = clamp(p.hold / holdNeed(p), 0, 1);
   const breathe = 1 + Math.sin(time * 3 + p.ph) * .03;
@@ -1369,6 +1823,7 @@ function drawHair(h) {
   }
   // follicle + faint root under skin
   ctx.fillStyle = hexA(client.line, .25); ell(F.x, F.y, rootR * .9, rootR * .9); ctx.fill();
+  if (h.long && h.stage) { ctx.fillStyle = client.skin; ell(F.x, F.y, rootR * .85, rootR * .85); ctx.fill(); ctx.strokeStyle = client.line; ctx.lineWidth = 1.5; ctx.stroke(); drawRoot(F.x, F.y, rootR * .5, h.rootPal); }
   ctx.fillStyle = hexA(client.hair, .7); ell(F.x, F.y, hl * .7, hl * .7); ctx.fill();
   ctx.strokeStyle = h.col; ctx.lineWidth = hl; strokePts(hairPts(h));
   // shine
@@ -1491,8 +1946,10 @@ function drawSplats() {
     }
     c.strokeStyle = 'rgba(255,255,255,.9)';
     for (const d of drips) if (d.len > 4) { c.lineWidth = d.w * .45; c.beginPath(); c.moveTo(d.x - d.w * .4, r * .38); c.lineTo(d.x - d.w * .4, r * .3 + d.len); c.stroke(); }
-    ctx.globalAlpha = fade * .94;
-    ctx.drawImage(splatCv, q.x - size / 2, q.y - cy, size, size);
+    let ox = 0, oy = 0, sq = 1, alpha = fade * .94;
+    if (q.wipeT != null) { const w = (q.t - q.wipeT) / .3; ox = q.wdx * w * 70; oy = q.wdy * w * 70; sq = 1 - w * .5; alpha *= 1 - w; }
+    ctx.globalAlpha = Math.max(0, alpha);
+    ctx.drawImage(splatCv, q.x - size / 2 * sq + ox, q.y - cy * sq + oy, size * sq, size * sq);
     ctx.globalAlpha = 1;
   }
 }
@@ -1541,11 +1998,20 @@ function drawTouches() {
 }
 
 function drawHint() {
-  if (state !== 'play' || action || idleT < (save.tutPop && save.tutPull ? 7 : 1.2)) return;
-  const alpha = clamp((idleT - 1.2) * 2, 0, 1) * .9;
-  let target = null, mode = null;
-  const pp = pimples.find(p => !p.popped), hh = hairs.find(h => !h.pulled && !h.hidden);
-  if (pp && (!save.tutPop || !hh || save.tutPull)) { target = pimplePos(pp); mode = 'pop'; }
+  if (state === 'finish' && finish && !finish.done && idleT > 1.2) {
+    const t = time * 1.3, gx = hx(Math.sin(t * 2) * .5), gy = hy(-.15 + ((t * .25) % 1) * .8);
+    ctx.globalAlpha = clamp((idleT - 1.2) * 2, 0, 1) * .9;
+    ctx.fillStyle = 'rgba(255,255,255,.6)'; ell(gx, gy, 22, 22); ctx.fill(); ctx.strokeStyle = '#ff7f9e'; ctx.lineWidth = 3; ctx.stroke();
+    drawText({ txt: 'swipe on the face!', x: W / 2, y: hy(-.75), col: '#ff7f9e', size: 20, t: 1, life: 99, rot: 0 });
+    ctx.globalAlpha = 1; return;
+  }
+  const thr = tutorial ? .5 : (save.tutPop && save.tutPull ? 7 : 1.2);
+  if (state !== 'play' || action || idleT < thr) return;
+  const alpha = clamp((idleT - thr) * 2, 0, 1) * .9;
+  let target = null, mode = null, pp = pimples.find(p => !p.popped), hh = hairs.find(h => !h.pulled && !h.hidden);
+  const step = tutorial && tutorial.i >= 0 ? tutorial.steps[tutorial.i].hint() : null;
+  if (step) { pp = step.mode === 'pop' ? step.p : null; hh = step.mode === 'pull' ? step.h : null; }
+  if (pp && (step || !save.tutPop || !hh || save.tutPull)) { target = pimplePos(pp); mode = 'pop'; }
   else if (hh) { const pts = hairPts(hh); target = hh.ingrown ? pts[pts.length - 1] : pts[6]; mode = 'pull'; target.h = hh; }
   if (!target) return;
   const ph = (time * .9) % 1, e = ph < .6 ? Math.sin(ph / .6 * Math.PI / 2) : 1;
@@ -1564,7 +2030,7 @@ function drawHint() {
     ctx.strokeStyle = '#ff7f9e'; ctx.lineWidth = 3; ctx.stroke();
   }
   ctx.globalAlpha = alpha;
-  drawText({ txt: mode === 'pop' ? 'pinch with 2 fingers!' : 'pinch the hair & pull!', x: clamp(target.x, 120, W - 120), y: target.y - 62 * Math.max(S, .8), col: mode === 'pop' ? '#ff7f9e' : '#6fcfa6', size: 20, t: 1, life: 99, rot: 0 });
+  drawText({ txt: mode === 'pop' ? (pp && pp.kind === 'blackhead' ? 'pinch & keep squeezing!' : 'pinch with 2 fingers!') : 'pinch the hair & pull!', x: clamp(target.x, 120, W - 120), y: target.y - 62 * Math.max(S, .8), col: mode === 'pop' ? '#ff7f9e' : '#6fcfa6', size: 20, t: 1, life: 99, rot: 0 });
   ctx.globalAlpha = 1;
 }
 
@@ -1592,7 +2058,10 @@ function drawParticle(p) {
 function drawFlyer(f) {
   ctx.save(); ctx.translate(f.x, f.y); ctx.rotate(f.rot);
   const homing = f.t > f.home ? clamp(1 - (f.t - f.home) * 1.6, .35, 1) : 1;
-  if (f.kind === 'star') {
+  if (f.kind === 'plug') {
+    const sc = 1.4 * homing * Math.min(1, f.t * 6 + .6); ctx.scale(sc, sc);
+    drawPlug(0, f.L * .5, 0, -1, f.L, f.R);
+  } else if (f.kind === 'star') {
     const s = 11 * Math.max(S, .8) * homing;
     ctx.fillStyle = f.col; starPath(ctx, 0, 0, s); ctx.fill(); ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
   } else {
@@ -1655,19 +2124,40 @@ $('#bSfx').addEventListener('click', () => { SFX.init(); SFX.setSfx(!save.sfx); 
 $('#bMus').addEventListener('click', () => { SFX.init(); SFX.setMusic(!save.music); persist(); setIcons(); SFX.click(); toast(save.music ? 'Music on ♪' : 'Music off'); });
 $('#play').addEventListener('click', () => {
   SFX.init(); SFX.click(); SFX.whoosh(); buzz(15);
+  if (mode !== 'relax') { mode = 'relax'; rush = null; genLevel(save.level); buildBg(); }
   $('#title').classList.add('hide'); $('#hud').classList.remove('off');
-  state = 'play'; wob.v += 9; SFX.boing(.2);
+  state = 'play'; wob.v += 9; SFX.boing(.2); updateHud();
   setTimeout(() => { say(pick(SAY_HI).replace('{n}', client.name), 2); SFX.giggle(); }, 250);
-  setTimeout(() => { const r = $('#score').getBoundingClientRect(); scoreTarget = { x: r.left + r.width / 2, y: r.top + r.height / 2 }; }, 600);
+  refreshScoreTarget();
   if (!('ontouchstart' in window) && navigator.maxTouchPoints < 2) setTimeout(() => toast('On desktop: hold to squeeze, drag to pull'), 1500);
 });
 $('#next').addEventListener('click', nextClient);
+$('#bHome').addEventListener('click', goHome);
+$('#rushBtn').addEventListener('click', startRush);
+$('#rushAgain').addEventListener('click', startRush);
+$('#rushHome').addEventListener('click', goHome);
+$('#bookBtn').addEventListener('click', () => { SFX.init(); SFX.click(); bookPage = 0; renderBook(); $('#book').classList.remove('hide'); });
+$('#bookClose').addEventListener('click', () => { SFX.click(); $('#book').classList.add('hide'); updateTitle(); });
+$('#pgPrev').addEventListener('click', () => { SFX.click(); bookPage = 0; renderBook(); });
+$('#pgNext').addEventListener('click', () => { SFX.click(); bookPage = 1; renderBook(); });
+
+/* ---------- add to home screen ---------- */
+let deferredInstall = null;
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferredInstall = e; $('#installBtn').hidden = false; });
+$('#installBtn').addEventListener('click', async () => {
+  if (!deferredInstall) return;
+  deferredInstall.prompt(); try { await deferredInstall.userChoice; } catch (_) {}
+  deferredInstall = null; $('#installBtn').hidden = true;
+});
+const isIOS = /iP(hone|od|ad)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+if (isIOS && !navigator.standalone) $('#iosTip').hidden = false;
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) navigator.serviceWorker.register('sw.js').catch(() => {});
 document.addEventListener('visibilitychange', () => { if (document.hidden) SFX.suspend(); else if (state !== 'title') SFX.resume(); });
 window.addEventListener('resize', resize);
 
 // boot: show the current client idle behind the title
 genLevel(save.level);
-resize(); setIcons(); updateHud();
+resize(); setIcons(); updateHud(); updateTitle();
 requestAnimationFrame(frame);
 if (document.fonts && document.fonts.load) document.fonts.load('700 20px Fredoka').catch(() => {});
 </script>
