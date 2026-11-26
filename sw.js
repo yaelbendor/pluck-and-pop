@@ -1,7 +1,7 @@
 // Pluck & Pop offline support.
 // The game page is fetched fresh whenever there's a connection (so updates show up right away),
 // and the last copy is kept for playing offline.
-const CACHE = 'pluck-pop-v7';
+const CACHE = 'pluck-pop-v8';
 const CORE = ['./', 'index.html', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png'];
 
 self.addEventListener('install', e => {

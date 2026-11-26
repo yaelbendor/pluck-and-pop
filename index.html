@@ -113,7 +113,7 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:
     <div class="howto">Use <b>two fingers</b>: pinch a bump to <b>pop</b> it, or pinch a hair and <b>pull</b> 🔊 sound on!</div>
     <div class="tip" id="iosTip" hidden>Play it like an app: tap <b>Share</b>, then <b>Add to Home Screen</b></div>
   </div>
-  <div id="ver">v7</div>
+  <div id="ver">v8</div>
 </div>
 
 <div id="rushOver" class="screen hide">
@@ -1477,7 +1477,7 @@ function drawEyes(c) {
     const ex = hx(s * .36), ey = hy(-.04);
     ctx.lineWidth = Math.max(3, er * .32); ctx.strokeStyle = ink; ctx.fillStyle = ink;
     if (expr === 'wince' || expr === 'ouch') {
-      ctx.beginPath(); ctx.moveTo(ex - s * er * .6, ey - er * .55); ctx.lineTo(ex + s * er * .45, ey); ctx.lineTo(ex - s * er * .6, ey + er * .55); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(ex + s * er * .6, ey - er * .55); ctx.lineTo(ex - s * er * .45, ey); ctx.lineTo(ex + s * er * .6, ey + er * .55); ctx.stroke();
       if (expr === 'ouch') { ctx.fillStyle = '#bfe6ff'; ell(ex + s * er * .2, ey + er * .95, er * .22, er * .3); ctx.fill(); }
     } else if (expr === 'happy') {
       ctx.beginPath(); ctx.arc(ex, ey + er * .4, er * .62, Math.PI * 1.15, Math.PI * 1.85); ctx.stroke();
@@ -1642,27 +1642,39 @@ function coatPath(x, y, rad, ang) {
   }
   ctx.closePath();
 }
-function drawRoot(x, y, rad, pal = ROOT_PALS[0], ang = -Math.PI / 2, juicy = false) {
-  // big round pearly bulb
+function drawBulb(x, y, rad, pal, deep) {
   const g = ctx.createRadialGradient(x - rad * .35, y - rad * .35, rad * .1, x, y, rad);
-  g.addColorStop(0, pal[0]); g.addColorStop(.5, pal[1]); g.addColorStop(.85, pal[2]); g.addColorStop(1, juicy ? pal[3] : pal[2]);
+  g.addColorStop(0, pal[0]); g.addColorStop(.5, pal[1]); g.addColorStop(.85, pal[2]); g.addColorStop(1, deep ? pal[3] : pal[2]);
   ell(x, y, rad, rad); ctx.fillStyle = g; ctx.fill();
   ctx.strokeStyle = pal[3]; ctx.lineWidth = Math.max(1.5, 2 * S); ctx.stroke();
-  if (!juicy) { ctx.fillStyle = 'rgba(255,255,255,.95)'; ell(x - rad * .38, y - rad * .4, rad * .26, rad * .17, -.6); ctx.fill(); return; }
-  // juicy roots: a glossy, milky gel layer coating only the round bulb
-  // clear in the middle so the bulb shows through, thicker and creamier at the edges
-  const gg = ctx.createRadialGradient(x, y, rad * .55, x, y, rad * 1.45);
-  gg.addColorStop(0, 'rgba(255,250,238,.12)'); gg.addColorStop(.55, 'rgba(255,246,228,.5)'); gg.addColorStop(1, 'rgba(255,240,215,.85)');
-  coatPath(x, y, rad, ang); ctx.fillStyle = gg; ctx.fill();
-  ctx.strokeStyle = 'rgba(232,206,170,.75)'; ctx.lineWidth = Math.max(1.4, 1.8 * S); ctx.stroke();
-  // wet shine: a long highlight along the gel's edge, a glint, and a soft lower rim light
+}
+function drawRoot(x, y, rad, pal = ROOT_PALS[0], ang = -Math.PI / 2, juicy = false) {
+  if (!juicy) {
+    drawBulb(x, y, rad, pal, false);
+    ctx.fillStyle = 'rgba(255,255,255,.95)'; ell(x - rad * .38, y - rad * .4, rad * .26, rad * .17, -.6); ctx.fill();
+    return;
+  }
+  // juicy roots: the round root sits INSIDE a clear jelly blob
+  const jr = rad * 1.15;                       // jelly is drawn around a slightly smaller bulb
+  const br = rad * .78;
+  // 1) the jelly's back: barely tinted so it reads as clear
+  coatPath(x, y, jr, ang);
+  const back = ctx.createRadialGradient(x, y, jr * .3, x, y, jr * 1.5);
+  back.addColorStop(0, 'rgba(255,255,255,.08)'); back.addColorStop(.75, 'rgba(255,248,236,.22)'); back.addColorStop(1, 'rgba(255,240,222,.4)');
+  ctx.fillStyle = back; ctx.fill();
+  // 2) the root inside, fully visible
+  drawBulb(x, y, br, pal, true);
+  ctx.fillStyle = 'rgba(255,255,255,.8)'; ell(x - br * .35, y - br * .38, br * .22, br * .14, -.6); ctx.fill();
+  // 3) the jelly's front surface: crisp clear outline, shine and refraction glints
+  coatPath(x, y, jr, ang);
+  ctx.strokeStyle = 'rgba(214,190,170,.7)'; ctx.lineWidth = Math.max(1.3, 1.6 * S); ctx.stroke();
   ctx.lineCap = 'round';
-  ctx.strokeStyle = 'rgba(255,255,255,.95)'; ctx.lineWidth = rad * .15;
-  ctx.beginPath(); ctx.arc(x, y, rad * 1.06, Math.PI * .95, Math.PI * 1.35); ctx.stroke();
-  ctx.lineWidth = rad * .09; ctx.beginPath(); ctx.arc(x, y, rad * 1.06, Math.PI * 1.45, Math.PI * 1.55); ctx.stroke();
-  ctx.fillStyle = '#fff'; ell(x - rad * .3, y - rad * .32, rad * .17, rad * .11, -.6); ctx.fill();
-  ctx.strokeStyle = 'rgba(255,255,255,.5)'; ctx.lineWidth = rad * .07;
-  ctx.beginPath(); ctx.arc(x, y, rad * 1.04, Math.PI * .12, Math.PI * .48); ctx.stroke();
+  ctx.strokeStyle = 'rgba(255,255,255,.95)'; ctx.lineWidth = rad * .13;
+  ctx.beginPath(); ctx.arc(x, y, jr * 1.1, Math.PI * .98, Math.PI * 1.36); ctx.stroke();
+  ctx.lineWidth = rad * .08; ctx.beginPath(); ctx.arc(x, y, jr * 1.1, Math.PI * 1.46, Math.PI * 1.56); ctx.stroke();
+  ctx.strokeStyle = 'rgba(255,255,255,.6)'; ctx.lineWidth = rad * .07;
+  ctx.beginPath(); ctx.arc(x, y, jr * 1.08, Math.PI * .1, Math.PI * .45); ctx.stroke();
+  ctx.fillStyle = '#fff'; ell(x + jr * .55, y - jr * .62, rad * .08, rad * .08); ctx.fill();
 }
 function strokePts(pts) {
   ctx.beginPath(); ctx.moveTo(pts[0].x, pts[0].y);
