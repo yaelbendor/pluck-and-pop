@@ -148,8 +148,8 @@ const SFX = (() => {
     const vOut = ac.createGain(); vOut.gain.value = .5; verb.connect(vOut); vOut.connect(master);
     sfxBus = ac.createGain(); sfxBus.gain.value = save.sfx ? 1 : 0; sfxBus.connect(master);
     const sSend = ac.createGain(); sSend.gain.value = .18; sfxBus.connect(sSend); sSend.connect(verb);
-    musBus = ac.createGain(); musBus.gain.value = save.music ? .55 : 0; musBus.connect(master);
-    const mSend = ac.createGain(); mSend.gain.value = .6; musBus.connect(mSend); mSend.connect(verb);
+    musBus = ac.createGain(); musBus.gain.value = save.music ? .45 : 0; musBus.connect(master);
+    const mSend = ac.createGain(); mSend.gain.value = .12; musBus.connect(mSend); mSend.connect(verb);
     noiseBuf = ac.createBuffer(1, ac.sampleRate, ac.sampleRate);
     const nd = noiseBuf.getChannelData(0); for (let i = 0; i < nd.length; i++) nd[i] = Math.random() * 2 - 1;
     // iOS unlock blip
@@ -248,7 +248,7 @@ const SFX = (() => {
     init,
     get ctx() { return ac; },
     setSfx(on) { save.sfx = on; if (sfxBus) sfxBus.gain.setTargetAtTime(on ? 1 : 0, ac.currentTime, .05); },
-    setMusic(on) { save.music = on; if (musBus) musBus.gain.setTargetAtTime(on ? .55 : 0, ac.currentTime, .3); },
+    setMusic(on) { save.music = on; if (musBus) musBus.gain.setTargetAtTime(on ? .45 : 0, ac.currentTime, .3); },
     suspend() { if (ac) ac.suspend(); }, resume() { if (ac) ac.resume(); },
     loop,
     pop(pitch = 1, kind = 'small') {
@@ -266,21 +266,35 @@ const SFX = (() => {
       for (let i = 0; i < 3; i++) bell(mtof(base + PENTA[i * 2 + (level % 2)]), .03 + i * .055, .08, .8);
     },
     pluck() {
-      tone({ f: 220, f2: 1600, t: .14, slide: .11, v: .26, type: 'triangle' });
-      noise({ t: .09, type: 'highpass', f: 2500, v: .22 });
-      tone({ f: 900, f2: 160, t: .12, v: .5, when: .03 });
-      noise({ t: .05, f: 1800, q: 1.2, v: .3, when: .03 });
+      // cork-out-of-a-bottle "thwop": a tight click, a fast falling body and a low thump
+      noise({ t: .025, f: 2600, q: 3, v: .45 });
+      tone({ f: 820, f2: 170, t: .09, v: .6 });
+      tone({ f: 1640, f2: 420, t: .045, v: .14, type: 'triangle' });
+      tone({ f: 120, f2: 55, t: .16, v: .4 });
+      // then a happy little "bloop" and two bright plinks
+      tone({ f: 330, f2: 720, t: .09, v: .22, when: .06 });
+      bell(1568, .1, .07, .35); bell(2093, .16, .06, .4);
     },
     splat() {
-      noise({ t: .12, type: 'lowpass', f: 900, f2: 250, q: 2, v: .4 });
-      tone({ f: 220, f2: 70, t: .14, v: .35 });
-      tone({ f: 600, f2: 900, t: .05, v: .06, when: .07 });
+      noise({ t: .09, type: 'lowpass', f: 1600, f2: 350, q: 1.5, v: .3 });
+      tone({ f: 320, f2: 130, t: .08, v: .18 });
+      tone({ f: 700, f2: 1100, t: .04, v: .06, when: .06 });
     },
     squirt() {
-      noise({ t: .18, type: 'lowpass', f: 400, f2: 2400, q: 5, v: .3 });
-      tone({ f: 150, f2: 340, t: .13, v: .28 });
-      tone({ f: 340, f2: 160, t: .12, v: .18, when: .1 });
-      tone({ f: 1200, f2: 1700, t: .05, v: .07, when: .2 });
+      // liquid "pssshlp": fluttering band of noise that sweeps down, plus tiny bubble blips
+      if (!ok()) return;
+      const t0 = ac.currentTime, dur = .3;
+      const src = ac.createBufferSource(); src.buffer = noiseBuf;
+      const bp = ac.createBiquadFilter(); bp.type = 'bandpass'; bp.Q.value = 2.5;
+      bp.frequency.setValueAtTime(2600, t0); bp.frequency.exponentialRampToValueAtTime(700, t0 + dur);
+      const g = ac.createGain(); env(g, t0, .008, .5, dur);
+      const flut = ac.createGain(); flut.gain.value = .55;
+      const lfo = ac.createOscillator(); lfo.type = 'square'; lfo.frequency.setValueAtTime(38, t0); lfo.frequency.linearRampToValueAtTime(22, t0 + dur);
+      const lg = ac.createGain(); lg.gain.value = .45; lfo.connect(lg); lg.connect(flut.gain);
+      src.connect(bp); bp.connect(flut); flut.connect(g); g.connect(sfxBus);
+      src.start(t0, Math.random() * .5); src.stop(t0 + dur + .05); lfo.start(t0); lfo.stop(t0 + dur + .05);
+      noise({ t: .04, type: 'highpass', f: 3500, v: .16 });
+      for (let i = 0; i < 5; i++) { const f = rand(500, 1000); tone({ f, f2: f * 1.7, t: .035, v: .09, when: .05 + i * .045 + rand(0, .02) }); }
     },
     boing(v = .3) {
       if (!ok()) return;
@@ -312,31 +326,43 @@ const SFX = (() => {
     star(i) { bell(mtof(79 + [0, 4, 7][i]), 0, .14, 1); tone({ f: 300 + i * 120, f2: 900 + i * 200, t: .12, v: .08, type: 'triangle' }); },
   };
 
-  /* ---------- cozy music box + pad ---------- */
+  /* ---------- bouncy little spa tune: marimba melody, boop bass, soft percussion ---------- */
   let mTimer = null, nextT = 0, step = 0;
-  const CHORDS = [[60, 64, 67, 71], [57, 60, 64, 67], [53, 57, 60, 64], [55, 59, 62, 65]];
+  const BPM = 104, EIGHTH = 60 / BPM / 2;
+  const CHORDS = [[60, 64, 67], [57, 60, 64], [53, 57, 60], [55, 59, 62]]; // C, Am, F, G
+  // two 4-bar phrases, one note per eighth (0 = rest)
+  const MELODY = [
+    76, 79, 84, 79, 81, 79, 76, 0,   76, 0, 72, 76, 81, 0, 79, 0,
+    77, 81, 84, 81, 79, 77, 76, 0,   74, 0, 79, 0, 83, 81, 79, 0,
+    79, 0, 76, 79, 84, 0, 86, 84,    81, 0, 76, 0, 84, 83, 81, 0,
+    77, 79, 81, 84, 81, 0, 77, 0,    79, 0, 83, 86, 84, 0, 0, 0,
+  ];
+  function mallet(f, when, v) {
+    tone({ f, t: .32, v, a: .002, when, dest: musBus });
+    tone({ f: f * 3.93, t: .05, v: v * .22, a: .001, when, dest: musBus });
+    tone({ f: f * 2, t: .12, v: v * .12, a: .002, when, dest: musBus, type: 'triangle' });
+  }
   function startMusic() {
     nextT = ac.currentTime + .2;
     mTimer = setInterval(() => {
       if (!ok()) return;
-      while (nextT < ac.currentTime + .25) { sched(step, nextT); step++; nextT += 60 / 78 / 2; }
+      while (nextT < ac.currentTime + .25) { sched(step, nextT); step++; nextT += EIGHTH; }
     }, 40);
   }
   function sched(s, t) {
-    const ch = CHORDS[Math.floor(s / 8) % 4], when = t - ac.currentTime, eighth = 60 / 78 / 2;
-    if (s % 8 === 0) {
-      ch.forEach(m => {
-        tone({ f: mtof(m - 12), t: eighth * 8.5, v: .022, type: 'triangle', a: .9, when, lp: 900, dest: musBus, det: -6 });
-        tone({ f: mtof(m - 12), t: eighth * 8.5, v: .022, type: 'triangle', a: .9, when, lp: 900, dest: musBus, det: 7 });
-      });
-      tone({ f: mtof(ch[0] - 24), t: eighth * 3.5, v: .09, a: .02, when, dest: musBus });
-    }
-    if (s % 8 === 4) tone({ f: mtof(ch[0] - 24 + 7), t: eighth * 3, v: .06, a: .02, when, dest: musBus });
-    const melodic = (s % 2 === 0) ? Math.random() < .7 : Math.random() < .25;
-    if (melodic) {
-      const pool = ch.map(m => m + 12).concat(ch.map(m => m + 24));
-      bell(mtof(pick(pool)), when, .035, 1.4, musBus);
-    }
+    const when = t - ac.currentTime, e = s % 8, bar = Math.floor(s / 8), ch = CHORDS[bar % 4], loop = Math.floor(s / 64);
+    // boop bass: root on beat 1, fifth on beat 3, a little pickup on the last eighth
+    if (e === 0) tone({ f: mtof(ch[0] - 24), t: .3, v: .2, a: .005, when, dest: musBus });
+    if (e === 4) tone({ f: mtof(ch[0] - 17), t: .25, v: .15, a: .005, when, dest: musBus });
+    if (e === 7 && bar % 2) tone({ f: mtof(ch[0] - 22), t: .12, v: .1, a: .005, when, dest: musBus });
+    // offbeat chord "pah"s
+    if (e === 2 || e === 6) ch.forEach(m => mallet(mtof(m), when, .035));
+    // soft kick, tiny ticks, gentle snap
+    if (e === 0 || e === 4) tone({ f: 130, f2: 48, t: .12, v: .22, when, dest: musBus });
+    if (e % 2 === 1) noise({ t: .025, type: 'highpass', f: 7000, v: .035, when, dest: musBus });
+    if (e === 2 || e === 6) noise({ t: .06, f: 1900, q: 1.3, v: .06, when, dest: musBus });
+    // melody (every 4th time round it takes a break so the loop doesn't get tiring)
+    if (loop % 4 !== 3) { const m = MELODY[s % 64]; if (m) mallet(mtof(m), when, .09); }
   }
   return api;
 })();
