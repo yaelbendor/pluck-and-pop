@@ -72,14 +72,15 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:
 .card{background:var(--cream);border-radius:30px;padding:20px 24px 26px;width:min(330px,88vw);box-shadow:var(--shadow);transform:scale(.6);opacity:0;transition:transform .5s cubic-bezier(.3,1.7,.5,1),opacity .25s}
 .screen:not(.hide) .card{transform:scale(1);opacity:1}
 #rushOver,#shop,#stats{background:rgba(255,220,230,.55)}
+#shop,#stats{z-index:30}
 #shop .card,#stats .card{width:min(370px,92vw);max-height:calc(100% - 20px);overflow:auto}
-.prod{display:flex;align-items:center;gap:10px;text-align:left;background:#fff;border-radius:18px;padding:10px 12px;margin:10px 0;box-shadow:0 3px 0 rgba(150,80,110,.1)}
-.prod .pic{font-size:34px;flex:0 0 auto}
-.pinfo{flex:1;min-width:0}
+.prod{display:grid;grid-template-columns:auto 1fr;grid-template-areas:'pic info' 'pic buy';align-items:center;column-gap:12px;row-gap:8px;text-align:left;background:#fff;border-radius:18px;padding:12px 14px;margin:10px 0;box-shadow:0 3px 0 rgba(150,80,110,.1)}
+.prod .pic{grid-area:pic;font-size:38px}
+.pinfo{grid-area:info;min-width:0}
 .pinfo b{display:block;font-size:16px}
 .pinfo small{display:block;font-size:13px;opacity:.75;line-height:1.3}
 .pinfo i{display:block;font-style:normal;font-size:12px;opacity:.6;margin-top:3px}
-.buy{flex:0 0 auto;font-size:15px;padding:9px 12px}
+.buy{grid-area:buy;justify-self:start;font-size:15px;padding:8px 16px}
 .buy[disabled]{opacity:.4}
 .note{font-size:13px!important;margin:4px 0 14px!important}
 #statGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0 16px}
@@ -138,7 +139,7 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:
     <div class="howto">Use <b>two fingers</b>: pinch a bump to <b>pop</b> it, or pinch a hair and <b>pull</b> 🔊 sound on!</div>
     <div class="tip" id="iosTip" hidden>Play it like an app: tap <b>Share</b>, then <b>Add to Home Screen</b></div>
   </div>
-  <div id="ver">v9</div>
+  <div id="ver">v10</div>
 </div>
 
 <div id="shop" class="screen hide">
@@ -2194,9 +2195,9 @@ $('#play').addEventListener('click', () => {
 $('#next').addEventListener('click', nextClient);
 $('#bHome').addEventListener('click', goHome);
 $('#shopBtn').addEventListener('click', () => openScreen('#shop', renderShop));
-$('#winShop').addEventListener('click', () => openScreen('#shop', renderShop));
+$('#winShop').addEventListener('click', () => { $('#win').classList.add('hide'); openScreen('#shop', renderShop); });
 $('#statsBtn').addEventListener('click', () => openScreen('#stats', renderStats));
-$('#shopClose').addEventListener('click', () => { SFX.click(); $('#shop').classList.add('hide'); updateCreamButtons(); });
+$('#shopClose').addEventListener('click', () => { SFX.click(); $('#shop').classList.add('hide'); updateCreamButtons(); if (state === 'win') $('#win').classList.remove('hide'); });
 $('#statsClose').addEventListener('click', () => { SFX.click(); $('#stats').classList.add('hide'); });
 $('#use-soft').addEventListener('click', () => useCream('soft'));
 $('#use-silky').addEventListener('click', () => useCream('silky'));
