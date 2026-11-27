@@ -71,7 +71,28 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:
 #win{background:linear-gradient(rgba(255,220,230,0) 40%,rgba(255,220,230,.5));justify-content:flex-end;padding-bottom:calc(env(safe-area-inset-bottom) + 28px)}
 .card{background:var(--cream);border-radius:30px;padding:20px 24px 26px;width:min(330px,88vw);box-shadow:var(--shadow);transform:scale(.6);opacity:0;transition:transform .5s cubic-bezier(.3,1.7,.5,1),opacity .25s}
 .screen:not(.hide) .card{transform:scale(1);opacity:1}
-#rushOver{background:rgba(255,220,230,.55)}
+#rushOver,#shop,#stats{background:rgba(255,220,230,.55)}
+#shop .card,#stats .card{width:min(370px,92vw);max-height:calc(100% - 20px);overflow:auto}
+.prod{display:flex;align-items:center;gap:10px;text-align:left;background:#fff;border-radius:18px;padding:10px 12px;margin:10px 0;box-shadow:0 3px 0 rgba(150,80,110,.1)}
+.prod .pic{font-size:34px;flex:0 0 auto}
+.pinfo{flex:1;min-width:0}
+.pinfo b{display:block;font-size:16px}
+.pinfo small{display:block;font-size:13px;opacity:.75;line-height:1.3}
+.pinfo i{display:block;font-style:normal;font-size:12px;opacity:.6;margin-top:3px}
+.buy{flex:0 0 auto;font-size:15px;padding:9px 12px}
+.buy[disabled]{opacity:.4}
+.note{font-size:13px!important;margin:4px 0 14px!important}
+#statGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0 16px}
+.stat{background:#fff;border-radius:16px;padding:8px 4px;display:flex;flex-direction:column;align-items:center;box-shadow:0 3px 0 rgba(150,80,110,.1);min-width:0}
+.stat span{font-size:20px}
+.stat b{font-size:20px;font-variant-numeric:tabular-nums}
+.stat small{font-size:11px;opacity:.7;line-height:1.2}
+.visit{font-size:14px!important;margin:-4px 0 4px!important}
+.ib.cream{position:relative;flex:0 0 auto}
+.ib.cream[hidden]{display:none}
+.ib.cream sup{position:absolute;right:-3px;top:-4px;background:var(--pink);color:#fff;font-size:10px;font-weight:700;border-radius:99px;padding:1px 5px}
+.ib.cream.on{background:#fff4c9;box-shadow:0 0 0 3px #ffd36b}
+.ib.cream.on sup{background:#6fcfa6}
 .card h2{margin:0;font-size:30px;color:var(--pink);line-height:1.1}
 .card p{margin:4px 0 0;font-size:16px;font-weight:500;opacity:.8}
 .row{display:flex;align-items:center;justify-content:center;gap:14px;margin:6px 0 12px}
@@ -95,6 +116,8 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:
   <div class="pill" id="who">Mochi <small>#1</small></div>
   <div id="barWrap"><div id="bar"></div></div>
   <div class="pill" id="score">⭐ <b id="scoreN">0</b></div>
+  <button class="ib cream" id="use-soft" aria-label="Use soft-pop cream" hidden>🧴<sup>0</sup></button>
+  <button class="ib cream" id="use-silky" aria-label="Use silky serum" hidden>💧<sup>0</sup></button>
 </div>
 
 <div id="title" class="screen">
@@ -108,12 +131,32 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:
     <button class="btn" id="play">Open the spa ✨</button>
     <div class="menu2">
       <button class="pbtn" id="rushBtn">⏱ Rush hour</button>
+      <button class="pbtn" id="shopBtn">🛍 Cream shop</button>
+      <button class="pbtn" id="statsBtn">📊 Stats</button>
     </div>
     <button class="pbtn" id="installBtn" hidden>📲 Add to home screen</button>
     <div class="howto">Use <b>two fingers</b>: pinch a bump to <b>pop</b> it, or pinch a hair and <b>pull</b> 🔊 sound on!</div>
     <div class="tip" id="iosTip" hidden>Play it like an app: tap <b>Share</b>, then <b>Add to Home Screen</b></div>
   </div>
-  <div id="ver">v8</div>
+  <div id="ver">v9</div>
+</div>
+
+<div id="shop" class="screen hide">
+  <div class="card">
+    <h2>Cream shop</h2>
+    <p id="shopBal">You have ⭐ 0</p>
+    <div id="shopList"></div>
+    <p class="note">Tap a cream's button at the top during a visit to use it on that client.</p>
+    <button class="btn alt" id="shopClose">Done</button>
+  </div>
+</div>
+
+<div id="stats" class="screen hide">
+  <div class="card">
+    <h2>Your spa stats</h2>
+    <div id="statGrid"></div>
+    <button class="btn alt" id="statsClose">Done</button>
+  </div>
 </div>
 
 <div id="rushOver" class="screen hide">
@@ -135,7 +178,11 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:
     <p id="winMsg">Mochi feels brand new</p>
     <div class="row"><div class="stars" id="stars"><span>★</span><span>★</span><span>★</span></div>
     <div class="big" id="winScore">+0</div></div>
-    <button class="btn alt" id="next">Next client →</button>
+    <p class="visit" id="visitTxt"></p>
+    <div class="cardbtns">
+      <button class="btn alt" id="next">Next client →</button>
+      <button class="pbtn" id="winShop">🛍 Cream shop</button>
+    </div>
   </div>
 </div>
 <div id="banner" class="hide"></div>
@@ -163,6 +210,8 @@ const easeInBack = t => 2.7 * t * t * t - 1.7 * t * t;
 const SAVE_KEY = 'popPluck.v1';
 const loaded = (() => { try { return JSON.parse(localStorage.getItem(SAVE_KEY)) || {}; } catch (e) { return {}; } })();
 const save = Object.assign({ level: 1, total: 0, tutPop: false, tutPull: false, sfx: true, music: true, rushBest: 0, tutDone: false }, loaded);
+save.stats = Object.assign({ clients: 0, pimples: 0, big: 0, huge: 0, blackheads: 0, hairs: 0, juicy: 0, ingrown: 0, bestCombo: 0, creams: 0 }, loaded.stats || {});
+save.creams = Object.assign({ soft: 0, silky: 0 }, loaded.creams || {});
 if (!('tutDone' in loaded) && save.level > 1) save.tutDone = true; // players from before the tutorial existed
 const persist = () => { try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch (e) {} };
 
@@ -468,6 +517,7 @@ let scoreTarget = { x: 0, y: 0 };
 const pointers = new Map();
 let bgCanvas = null;
 let mode = 'relax', rush = null, finish = null, tutorial = null, squeakT = 0;
+let boost = { soft: false, silky: false }, visit = { pimples: 0, blackheads: 0, hairs: 0 };
 const creamCv = document.createElement('canvas'), cctx = creamCv.getContext('2d');
 let hx = n => head.cx + n * head.r, hy = n => head.cy + n * head.r;
 
@@ -526,11 +576,30 @@ function roundRect(c, x, y, w, h, r) { c.beginPath(); c.moveTo(x + r, y); c.arcT
    LEVEL GENERATION
    ============================================================ */
 const EYE_L = { x: -.36, y: -.04 }, EYE_R = { x: .36, y: -.04 }, MOUTH = { x: 0, y: .27 };
+/* Difficulty curve: level 1 is just small bumps and one hair; every level after adds one new thing,
+   then counts and toughness slowly rise. */
+const INTROS = {
+  2: 'New: big bumps! Squeeze and hold until they pop',
+  3: 'New: blackheads! Squeeze and keep holding',
+  4: 'New: HUGE pimples! Squeeze them 3 times',
+  5: 'New: some bumps hide a hair inside!',
+  6: 'New: hair clusters! Grab them all at once',
+  7: 'New: extra long hairs! Pull them twice',
+};
+let curLevel = 1;
 function genLevel(n, opts = {}) {
   client = opts.client || (opts.rush ? pick(CLIENTS.filter(c => c !== client)) : CLIENTS[(n - 1) % CLIENTS.length]);
-  pimples = []; hairs = []; finish = null; tutorial = null;
+  pimples = []; hairs = []; finish = null; tutorial = null; curLevel = n;
   if (!opts.rush && !save.tutDone) { buildTutorial(); resetLevelState(); return; }
-  const np = Math.min(3 + n, 8), nh = Math.min(1 + Math.ceil(n / 2), 5) - (n >= 3 ? 1 : 0) - (n >= 6 ? 1 : 0);
+  const nHuge = n >= 4 ? (n >= 9 ? 2 : 1) : 0;
+  const ni = n >= 5 ? (n >= 8 ? 2 : 1) : 0;
+  const nb = n >= 3 ? Math.min(1 + Math.floor((n - 3) / 3), nHuge > 1 ? 2 : 3) : 0;
+  const nc = n >= 6 ? (n >= 10 ? 2 : 1) : 0;
+  const nLong = n >= 7 ? 1 : 0;
+  // bigger features take room, so plain bumps and hairs make way for them
+  const nBig = n >= 2 ? Math.min(1 + Math.floor((n - 2) / 3), 2) : 0;
+  const nSmall = Math.max(2, Math.min(3 + Math.floor(n / 3), 6) - nHuge * 2 - ni);
+  const nh = Math.max(1, Math.min(1 + Math.floor(n / 2), 4) - nc - nLong);
   const taken = [];
   const okSpot = (x, y, rad, minGap) => {
     if ((x * x) + (y / .9) * (y / .9) > Math.pow(.8 - rad, 2)) return false;
@@ -540,33 +609,37 @@ function genLevel(n, opts = {}) {
     for (const t of taken) if (dist(x, y, t.x, t.y) < t.r + rad + minGap) return false;
     return true;
   };
+  const place = (count, rad, gap, area, make) => {
+    for (let i = 0; i < count; i++) for (let tries = 0; tries < 400; tries++) {
+      const x = rand(-area[0], area[0]), y = rand(area[1], area[2]);
+      if (okSpot(x, y, rad, gap)) { taken.push({ x, y, r: rad }); make(x, y, i); break; }
+    }
+  };
+  const hairOk = (x, y, ang, len) => { const tx = x + Math.cos(ang) * len, ty = y + Math.sin(ang) * len; return dist(tx, ty, MOUTH.x, MOUTH.y) > .18 && dist(tx, ty, EYE_L.x, EYE_L.y) > .22 && dist(tx, ty, EYE_R.x, EYE_R.y) > .22; };
+  // huge pimples: three squeezes each
+  place(Math.min(nHuge, 1), .18, .05, [.55, -.18, .6], (x, y) => { const p = newPimple(x, y, .14, 'huge'); p.hp = p.maxHp = 3; p.look.twin = rand(0, TAU); p.look.hs = 1.15; pimples.push(p); });
   // ingrown hairs: a pimple with a curled hair trapped under it
-  const ni = n >= 2 ? (n >= 5 ? 2 : 1) : 0;
-  for (let i = 0; i < ni; i++) {
-    for (let tries = 0; tries < 400; tries++) {
-      const x = rand(-.62, .62), y = rand(-.2, .62);
-      if (okSpot(x, y, .2, .06)) {
-        taken.push({ x, y, r: .2 });
-        const p = newPimple(x, y, .12, 'ingrown'); pimples.push(p);
-        hairs.push({ nx: x, ny: y, ang: rand(0, TAU), len: .25, curl: pick([-1, 1]), ph: rand(0, TAU), wx: 0, wv: 0, tension: 0, pulled: false, grip: null, tough: false, ingrown: true, hidden: true, freed: false, stuckT: 0, pimple: p, turns: rand(.9, 1.3), sq: rand(.68, 1), tilt: rand(0, TAU), spread: rand(.6, 1.1), ...hairLook(), hook: false });
-        break;
-      }
+  place(Math.min(ni, 1), .2, .06, [.62, -.2, .62], (x, y) => {
+    const p = newPimple(x, y, .12, 'ingrown'); pimples.push(p);
+    hairs.push(newHair({ nx: x, ny: y, ang: rand(0, TAU), len: .25, curl: pick([-1, 1]), ingrown: true, hidden: true, freed: false, stuckT: 0, pimple: p, turns: rand(.9, 1.3), sq: rand(.68, 1), tilt: rand(0, TAU), spread: rand(.6, 1.1), hook: false }));
+  });
+  // one long curly hair that needs two pulls
+  for (let k = 0; k < nLong; k++) for (let tries = 0; tries < 300; tries++) {
+    const x = rand(-.6, .6), y = rand(.05, .6), ang = Math.atan2(y + .2, x) + rand(-.4, .4);
+    if (okSpot(x, y, .06, .12) && hairOk(x, y, ang, .28)) {
+      const tx = x + Math.cos(ang) * .28, ty = y + Math.sin(ang) * .28;
+      taken.push({ x, y, r: .06 }); taken.push({ x: (x + tx) / 2, y: (y + ty) / 2, r: .1 });
+      hairs.push(newHair({ nx: x, ny: y, ang, len: .28, curl: pick([-1, 1]), long: true, stage: 0, waves: rand(3, 4), amp: rand(.14, .2), hook: true }));
+      break;
     }
   }
-  // blackheads
-  const nb = n >= 2 ? Math.min(1 + Math.floor((n - 1) / 3), 3) : 0;
-  for (let i = 0; i < nb; i++) for (let tries = 0; tries < 300; tries++) {
-    const x = rand(-.7, .7), y = rand(-.3, .72);
-    if (okSpot(x, y, .07, .08)) { taken.push({ x, y, r: .07 }); pimples.push(newPimple(x, y, .045, 'blackhead')); break; }
-  }
   // clusters: 2-3 hairs from one spot, pluckable together
-  const nc = n >= 3 ? (n >= 6 ? 2 : 1) : 0;
   for (let ci = 0; ci < nc; ci++) for (let tries = 0; tries < 300; tries++) {
     const x = rand(-.6, .6), y = rand(.05, .66), base = Math.atan2(y + .2, x) + rand(-.3, .3);
-    const tx = x + Math.cos(base) * .2, ty = y + Math.sin(base) * .2;
-    if (okSpot(x, y, .1, .1) && dist(tx, ty, MOUTH.x, MOUTH.y) > .18 && dist(tx, ty, EYE_L.x, EYE_L.y) > .22 && dist(tx, ty, EYE_R.x, EYE_R.y) > .22) {
+    if (okSpot(x, y, .1, .1) && hairOk(x, y, base, .2)) {
+      const tx = x + Math.cos(base) * .2, ty = y + Math.sin(base) * .2;
       taken.push({ x, y, r: .1 }); taken.push({ x: (x + tx) / 2, y: (y + ty) / 2, r: .08 });
-      const k = n >= 5 ? 3 : 2, id = 'c' + ci + Math.random();
+      const k = n >= 8 ? 3 : 2, id = 'c' + ci + Math.random();
       for (let i = 0; i < k; i++) {
         const o = i - (k - 1) / 2;
         hairs.push(newHair({ nx: x + o * .032 * Math.cos(base + Math.PI / 2), ny: y + o * .032 * Math.sin(base + Math.PI / 2), ang: base + o * .36, len: rand(.15, .2), curl: rand(.6, 1.1) * pick([-1, 1]), cluster: id }));
@@ -574,43 +647,38 @@ function genLevel(n, opts = {}) {
       break;
     }
   }
-  // one long curly hair that needs two pulls
-  if (n >= 4) for (let tries = 0; tries < 300; tries++) {
-    const x = rand(-.6, .6), y = rand(.05, .6), ang = Math.atan2(y + .2, x) + rand(-.4, .4);
-    const tx = x + Math.cos(ang) * .28, ty = y + Math.sin(ang) * .28;
-    if (okSpot(x, y, .06, .12) && dist(tx, ty, MOUTH.x, MOUTH.y) > .18 && dist(tx, ty, EYE_L.x, EYE_L.y) > .22 && dist(tx, ty, EYE_R.x, EYE_R.y) > .22) {
-      taken.push({ x, y, r: .06 }); taken.push({ x: (x + tx) / 2, y: (y + ty) / 2, r: .1 });
-      hairs.push(newHair({ nx: x, ny: y, ang, len: .28, curl: pick([-1, 1]), long: true, stage: 0, waves: rand(3, 4), amp: rand(.14, .2), hook: true }));
+  // extras, only if there's still room
+  place(nHuge - 1, .18, .05, [.55, -.18, .6], (x, y) => { const p = newPimple(x, y, .14, 'huge'); p.hp = p.maxHp = 3; p.look.twin = rand(0, TAU); p.look.hs = 1.15; pimples.push(p); });
+  place(ni - 1, .2, .06, [.62, -.2, .62], (x, y) => {
+    const p = newPimple(x, y, .12, 'ingrown'); pimples.push(p);
+    hairs.push(newHair({ nx: x, ny: y, ang: rand(0, TAU), len: .25, curl: pick([-1, 1]), ingrown: true, hidden: true, freed: false, stuckT: 0, pimple: p, turns: rand(.9, 1.3), sq: rand(.68, 1), tilt: rand(0, TAU), spread: rand(.6, 1.1), hook: false }));
+  });
+  place(nb, .07, .08, [.7, -.3, .72], (x, y) => pimples.push(newPimple(x, y, .045, 'blackhead')));
+  for (let i = 0; i < nh; i++) for (let tries = 0; tries < 300; tries++) {
+    const x = rand(-.7, .7), y = rand(.02, .72), ang = Math.atan2(y + .2, x) + rand(-.5, .5), len = rand(.15, .21);
+    if (okSpot(x, y, .05, .12) && hairOk(x, y, ang, len)) {
+      const tx = x + Math.cos(ang) * len, ty = y + Math.sin(ang) * len;
+      taken.push({ x, y, r: .05 }); taken.push({ x: (x + tx) / 2, y: (y + ty) / 2, r: .06 });
+      hairs.push(newHair({ nx: x, ny: y, ang, len, curl: rand(.6, 1.2) * pick([-1, 1]), tough: n >= 6 && Math.random() < .3 }));
       break;
     }
   }
-  for (let i = 0; i < nh; i++) {
-    for (let tries = 0; tries < 300; tries++) {
-      const x = rand(-.7, .7), y = rand(.02, .72);
-      const ang = Math.atan2(y + .2, x) + rand(-.5, .5);
-      const len = rand(.15, .21);
-      const tx = x + Math.cos(ang) * len, ty = y + Math.sin(ang) * len;
-      if (okSpot(x, y, .05, .12) && dist(tx, ty, MOUTH.x, MOUTH.y) > .16 && dist(tx, ty, EYE_L.x, EYE_L.y) > .2 && dist(tx, ty, EYE_R.x, EYE_R.y) > .2) {
-        taken.push({ x, y, r: .05 }); taken.push({ x: (x + tx) / 2, y: (y + ty) / 2, r: .06 });
-        hairs.push({ nx: x, ny: y, ang, len, curl: rand(.6, 1.2) * pick([-1, 1]), ph: rand(0, TAU), wx: 0, wv: 0, tension: 0, pulled: false, grip: null, tough: n >= 4 && Math.random() < .3, ...hairLook() });
-        break;
-      }
-    }
-  }
-  for (let i = ni + nb; i < np; i++) {
-    let kind = 'small';
-    if (n >= 2 && (i === 0 || Math.random() < .22)) kind = 'big';
-    if (n >= 3 && i === 1 && Math.random() < .6) kind = 'gold';
-    const size = kind === 'big' ? rand(.095, .11) : kind === 'gold' ? .08 : rand(.062, .078);
-    for (let tries = 0; tries < 300; tries++) {
-      const x = rand(-.8, .8), y = rand(-.34, .75);
-      if (okSpot(x, y, size, .1)) { taken.push({ x, y, r: size }); pimples.push(newPimple(x, y, size, kind)); break; }
-    }
-  }
+  place(nBig, .11, .1, [.8, -.34, .75], (x, y) => pimples.push(newPimple(x, y, rand(.095, .11), 'big')));
+  place(nSmall, .08, .1, [.8, -.34, .75], (x, y, i) => {
+    const gold = n >= 3 && i === 0 && Math.random() < .5;
+    pimples.push(newPimple(x, y, gold ? .08 : rand(.062, .078), gold ? 'gold' : 'small'));
+  });
+  // make sure every feature unlocked so far made it onto the face; otherwise lay it out again
+  const has = k => pimples.some(p => p.kind === k), hasHair = f => hairs.some(f);
+  const missing = (n >= 3 && !has('blackhead')) || (n >= 4 && !has('huge')) || (n >= 5 && !has('ingrown')) || (n >= 6 && !hasHair(h => h.cluster)) || (n >= 7 && !hasHair(h => h.long));
+  if (missing && (opts.tries || 0) < 15) return genLevel(n, { ...opts, client, tries: (opts.tries || 0) + 1 });
   resetLevelState();
 }
+// how much harder squeezes and pulls get as you level up
+const levelHardness = () => Math.min(1.5, 1 + (curLevel - 1) * .04);
 function resetLevelState() {
   slips = 0; levelScore = 0; clearedT = -1; winGlow = 0; combo = 0;
+  boost = { soft: false, silky: false }; visit = { pimples: 0, blackheads: 0, hairs: 0 }; updateCreamButtons();
   setExpr('idle', 0); flyers = []; texts = []; squirts = []; dollops = []; splats = [];
   banner(null); updateHud();
 }
@@ -637,16 +705,12 @@ function buildTutorial() {
   client = CLIENTS[0];
   const p1 = newPimple(-.52, .16, .075, 'small');
   const h1 = newHair({ nx: .52, ny: .3, ang: .7, len: .19, curl: .9, hook: false });
-  const bh = newPimple(-.3, .52, .05, 'blackhead');
-  const ing = newPimple(.06, -.24, .12, 'ingrown');
-  const ih = newHair({ nx: .06, ny: -.24, ang: rand(0, TAU), len: .25, curl: 1, ingrown: true, hidden: true, freed: false, stuckT: 0, pimple: ing, turns: 1.1, sq: .85, tilt: rand(0, TAU), spread: .9, hook: false });
-  pimples = [p1, bh, ing]; hairs = [h1, ih];
+  const p2 = newPimple(.08, -.22, .07, 'small');
+  pimples = [p1, p2]; hairs = [h1];
   tutorial = { i: -1, steps: [
     { txt: 'Pinch the bump with 2 fingers', done: () => p1.popped, hint: () => ({ mode: 'pop', p: p1 }) },
-    { txt: 'Pinch the hair tip, then pull', done: () => h1.pulled, hint: () => ({ mode: 'pull', h: h1 }) },
-    { txt: 'Squeeze the dark dot and hold', done: () => bh.popped, hint: () => ({ mode: 'pop', p: bh }) },
-    { txt: 'This bump hides a hair. Pop it!', done: () => ing.popped, hint: () => ({ mode: 'pop', p: ing }) },
-    { txt: 'Pull the hair. If it sticks, keep pulling!', done: () => ih.pulled, hint: () => ({ mode: 'pull', h: ih }) },
+    { txt: 'Pinch around the hair, then pull', done: () => h1.pulled, hint: () => ({ mode: 'pull', h: h1 }) },
+    { txt: 'Pop the last bump!', done: () => p2.popped, hint: () => ({ mode: 'pop', p: p2 }) },
   ] };
 }
 function updateTutorial() {
@@ -665,7 +729,7 @@ function newPimple(nx, ny, size, kind) {
   const look = { pal: pick(PIMPLE_PALS), ar: rand(.86, 1.15), rot: rand(0, TAU), hx: rand(-.15, .15), hy: rand(-.22, .05), hs: rand(.8, 1.22), twin: Math.random() < .18 ? rand(0, TAU) : null };
   return { nx, ny, size, kind, look, pressure: 0, hold: 0, ext: 0, popped: false, mark: 0, axis: 0, w: 0, wv: 0, ph: rand(0, TAU), tick: 0 };
 }
-const holdNeed = p => p.kind === 'blackhead' ? 99 : p.kind === 'big' ? .55 : p.kind === 'ingrown' ? .5 : p.kind === 'gold' ? .3 : .06;
+const holdNeed = p => (p.kind === 'blackhead' ? 99 : p.kind === 'huge' ? .6 : p.kind === 'big' ? .55 : p.kind === 'ingrown' ? .5 : p.kind === 'gold' ? .3 : .06) * levelHardness() * (boost.soft ? .4 : 1);
 
 /* ---------- positions ---------- */
 function pimplePos(p) { return { x: hx(p.nx), y: hy(p.ny) }; }
@@ -776,7 +840,7 @@ function mouseStart(x, y) {
 /* ---------- action control ---------- */
 function startSqueeze(p, ids, d, axis, src) {
   action = { type: 'squeeze', p, ids, d0: Math.max(d, 150 * Math.max(S, .8)), src, t: 0, loop: SFX.loop('squeeze') };
-  action.dmin = Math.max(85, action.d0 * .52);
+  action.dmin = Math.max(85, action.d0 * (boost.soft ? .66 : .52));
   p.axis = axis; ids.forEach(id => { const q = pointers.get(id); if (q) q.used = true; });
   setExpr('nervous', 99);
 }
@@ -859,7 +923,7 @@ function updateAction(dt) {
     if (p.pressure > .86) p.hold += dt; else p.hold = Math.max(0, p.hold - dt * 1.5);
     if (p.kind === 'blackhead') {
       // keep squeezing: the plug slowly squeezes out like toothpaste
-      if (p.pressure > .5) p.ext = Math.min(1, p.ext + dt * (.45 + p.pressure * .55));
+      if (p.pressure > .5) p.ext = Math.min(1, p.ext + dt * (.45 + p.pressure * .55) * (boost.soft ? 2 : 1) / levelHardness());
       action.loop.set(p.pressure, p.ext);
       const en = Math.floor(p.ext * 10);
       if (en > p.tick) { buzz(5); SFX.tick(.3 + p.ext * .7); }
@@ -881,7 +945,7 @@ function updateAction(dt) {
     if (action.src === 'touch' && d > Math.max(action.d0 * 1.9, action.d0 + 140)) { endAction(false); return; }
     const vx = (mx - action.px) / Math.max(dt, .001), vy = (my - action.py) / Math.max(dt, .001);
     action.vx = lerp(action.vx, vx, .3); action.vy = lerp(action.vy, vy, .3); action.px = mx; action.py = my;
-    const pullLen = Math.max(80, head.r * (h.ingrown ? .72 : h.long ? .56 : h.tough ? .62 : .48)) * (1 + .15 * (action.group.length - 1));
+    const pullLen = Math.max(70, head.r * (h.ingrown ? .72 : h.long ? .56 : h.tough ? .62 : .48)) * (1 + .15 * (action.group.length - 1)) * levelHardness() * (boost.silky ? .6 : 1);
     let target = clamp((dist(mx, my, F.x, F.y) - action.startDist) / pullLen, 0, 1);
     let stuckK = 0;
     if (h.ingrown && !h.freed) {
@@ -889,11 +953,12 @@ function updateAction(dt) {
       if (target >= CAP) {
         if (h.stuckT === 0) { const G = h.grip || F; addText('stuck! keep pulling!', G.x, G.y - 40 * S, '#e0992a', 20); SFX.eep(); buzz(20); }
         h.stuckT += dt;
-        stuckK = clamp(h.stuckT / .9, 0, 1);
+        const stuckNeed = boost.silky ? .3 : .9;
+        stuckK = clamp(h.stuckT / stuckNeed, 0, 1);
         if (Math.random() < dt * 25) burst(F.x, F.y, 1, ['sparkle', 'dot'], ['#fff', '#ffe17a'], 120);
         if (Math.random() < dt * 14) buzz(6 + stuckK * 14);
         shake = Math.max(shake, 1.5 + stuckK * 3);
-        if (h.stuckT >= .9) {
+        if (h.stuckT >= stuckNeed) {
           h.freed = true; stuckK = 0;
           ring(F.x, F.y, 60 * S, '#ffe17a'); burst(F.x, F.y, 10, ['star', 'sparkle'], ['#ffe17a', '#fff'], 300);
           addText('Unhooked!', F.x, F.y - 30 * S, '#e0992a', 26);
@@ -930,14 +995,30 @@ function updateAction(dt) {
    ============================================================ */
 function bumpCombo() {
   combo = comboT > 0 ? combo + 1 : 1; comboT = 2.4;
+  save.stats.bestCombo = Math.max(save.stats.bestCombo, combo);
   return Math.min(combo, 6);
 }
+function partialPop(p) {
+  const P = pimplePos(p), R = p.size * head.r;
+  endAction(true);
+  p.hp--; p.size *= .86; p.pressure = 0; p.hold = 0; p.wv += 18;
+  hitstop = .07; shake = 9; flash = .12; wob.v += 6;
+  ring(P.x, P.y, R * 5, '#fff');
+  burst(P.x, P.y, 10, ['heart', 'dot', 'sparkle'], ['#ff9fb8', '#fff', '#ffe17a'], 380);
+  burst(P.x, P.y, 6, ['foam'], ['#fffaf0'], 220);
+  splatScreen(P.x + rand(-80, 80), P.y + rand(-140, 20), 0);
+  for (let i = 0; i < 2; i++) flyers.push({ kind: 'star', x: P.x, y: P.y, vx: rand(-220, 220), vy: rand(-480, -220), t: 0, home: .45 + i * .05, val: 8, rot: rand(0, TAU), col: '#ff9fb8' });
+  addText(p.hp === 2 ? 'Squish! 2 more' : 'Almost! 1 more', P.x, P.y - R * 2.2, '#ff7f9e', 26);
+  SFX.squirt(); SFX.pop(.75, 'big'); setTimeout(() => SFX.splat(), 110);
+  buzz([20, 20, 30]); setExpr('ouch', .5);
+}
 function popPimple(p) {
+  if (p.kind === 'huge' && p.hp > 1) return partialPop(p);
   const P = pimplePos(p), R = p.size * head.r;
   endAction(true);
   p.popped = true; p.mark = 1; p.pressure = 0;
   const mult = bumpCombo();
-  const base = p.kind === 'big' ? 25 : p.kind === 'ingrown' ? 30 : p.kind === 'gold' ? 60 : p.kind === 'blackhead' ? 20 : 10;
+  const base = p.kind === 'huge' ? 60 : p.kind === 'big' ? 25 : p.kind === 'ingrown' ? 30 : p.kind === 'gold' ? 60 : p.kind === 'blackhead' ? 20 : 10;
   const pts = base * mult;
   const big = p.kind !== 'small' && p.kind !== 'blackhead';
   hitstop = big ? .1 : .055; shake = big ? 13 : 7; flash = big ? .22 : .1;
@@ -954,14 +1035,14 @@ function popPimple(p) {
   }
   const nStars = p.kind === 'blackhead' ? 0 : big ? 6 : 3;
   for (let i = 0; i < nStars; i++) flyers.push({ kind: 'star', x: P.x, y: P.y, vx: rand(-260, 260), vy: rand(-520, -220), t: 0, home: .45 + i * .05, val: pts / nStars, rot: rand(0, TAU), col: p.kind === 'gold' ? '#ffd65c' : pick(['#ffd65c', '#ff9fb8', '#9fdcc0']) });
-  if (p.kind === 'big' || p.kind === 'ingrown') {
+  if (p.kind === 'big' || p.kind === 'ingrown' || p.kind === 'huge') {
     // ...and a splat or two right on the camera lens
-    const nSplat = p.kind === 'big' ? (Math.random() < .6 ? 2 : 1) : 1;
+    const nSplat = p.kind === 'huge' ? 3 : p.kind === 'big' ? (Math.random() < .6 ? 2 : 1) : 1;
     for (let i = 0; i < nSplat; i++) splatScreen(P.x + rand(-90, 90), P.y + rand(-160, 30), i * .09);
     setTimeout(() => { SFX.splat(); buzz([10, 15, 30]); }, 120);
     setTimeout(() => SFX.squirt(), 20);
   }
-  const word = combo >= 3 ? `Combo x${combo}!` : p.kind === 'gold' ? 'Golden!' : p.kind === 'ingrown' ? 'Pop!' : p.kind === 'blackhead' ? pick(['Plop!', 'Squeaky clean!', 'Plip!']) : big ? 'BIG POP!' : pick(WORD_POP);
+  const word = combo >= 3 ? `Combo x${combo}!` : p.kind === 'gold' ? 'Golden!' : p.kind === 'ingrown' ? 'Pop!' : p.kind === 'blackhead' ? pick(['Plop!', 'Squeaky clean!', 'Plip!']) : p.kind === 'huge' ? 'MEGA POP!' : big ? 'BIG POP!' : pick(WORD_POP);
   if (p.kind === 'ingrown') {
     const ih = hairs.find(h => h.pimple === p);
     if (ih) {
@@ -977,6 +1058,9 @@ function popPimple(p) {
   setExpr('happy', 1.1);
   if (Math.random() < .55) setTimeout(() => SFX.giggle(), 160);
   if (Math.random() < .3) say(pick(SAY_POP));
+  const st = save.stats;
+  if (p.kind === 'blackhead') { st.blackheads++; visit.blackheads++; }
+  else { st.pimples++; visit.pimples++; if (p.kind === 'big') st.big++; if (p.kind === 'huge') st.huge++; }
   save.tutPop = true;
   checkClear();
 }
@@ -1004,6 +1088,9 @@ function pluckHair(h, vx, vy) {
   setExpr('ouch', .35); setTimeout(() => { if (expr === 'ouch') setExpr('happy', 1); }, 350);
   if (Math.random() < .5) setTimeout(() => SFX.eep(), 90);
   if (Math.random() < .35) say(pick(SAY_PLUCK));
+  save.stats.hairs += group.length; visit.hairs += group.length;
+  save.stats.juicy += group.filter(o => o.thick >= 1.3).length;
+  if (h.ingrown) save.stats.ingrown++;
   save.tutPull = true;
   checkClear();
 }
@@ -1023,6 +1110,12 @@ function doWin() {
   say('I feel so glowy~ ✨', 3);
   const stars = slips <= 1 ? 3 : slips <= 3 ? 2 : 1;
   if (tutorial) { save.tutDone = true; tutorial = null; }
+  save.stats.clients++;
+  const parts = [];
+  if (visit.pimples) parts.push(`${visit.pimples} pimple${visit.pimples > 1 ? 's' : ''}`);
+  if (visit.blackheads) parts.push(`${visit.blackheads} blackhead${visit.blackheads > 1 ? 's' : ''}`);
+  if (visit.hairs) parts.push(`${visit.hairs} hair${visit.hairs > 1 ? 's' : ''}`);
+  $('#visitTxt').textContent = parts.length ? 'This visit: ' + parts.join(' · ') : '';
   save.level++; persist();
   $('#winMsg').textContent = `${client.name} feels brand new!`;
   $('#winScore').textContent = `+${levelScore}`;
@@ -1086,7 +1179,7 @@ function wipeSplats() {
     }
   }
 }
-function hideScreens() { ['#win', '#rushOver'].forEach(q => $(q).classList.add('hide')); }
+function hideScreens() { ['#win', '#rushOver', '#shop', '#stats'].forEach(q => $(q).classList.add('hide')); }
 
 /* ---------- rush hour: as many clients as you can before the clock runs out ---------- */
 function startRush() {
@@ -1132,6 +1225,61 @@ function goHome() {
 function shownScoreValue() { return mode === 'rush' && rush ? rush.score : save.total; }
 function refreshScoreTarget() { setTimeout(() => { const r = $('#score').getBoundingClientRect(); scoreTarget = { x: r.left + r.width / 2, y: r.top + r.height / 2 }; }, 600); }
 
+let introT = null;
+function showIntro() {
+  const msg = mode === 'relax' && !tutorial && INTROS[curLevel];
+  if (!msg) return;
+  banner('✨ ' + msg); clearTimeout(introT);
+  introT = setTimeout(() => { if ($('#banner').textContent === '✨ ' + msg) banner(null); }, 4500);
+}
+
+/* ---------- treatment creams: buy with stars, use on one client ---------- */
+const CREAMS = {
+  soft: { icon: '🧴', name: 'Soft-pop cream', desc: 'Pimples and blackheads pop much easier. Huge pimples need one squeeze less.', price: 200 },
+  silky: { icon: '💧', name: 'Silky serum', desc: 'Hairs slide out easier, and hidden hairs barely get stuck.', price: 150 },
+};
+function updateCreamButtons() {
+  for (const k of Object.keys(CREAMS)) {
+    const b = $('#use-' + k); if (!b) continue;
+    b.hidden = !(save.creams[k] > 0 || boost[k]) || mode === 'rush';
+    b.classList.toggle('on', !!boost[k]);
+    b.querySelector('sup').textContent = boost[k] ? '✓' : save.creams[k];
+  }
+}
+function useCream(k) {
+  if (boost[k] || save.creams[k] <= 0 || state !== 'play') return;
+  save.creams[k]--; save.stats.creams++; boost[k] = true; persist();
+  if (k === 'soft') for (const p of pimples) if (p.kind === 'huge' && p.hp > 2) p.hp = 2;
+  SFX.swish(); SFX.sparkle(3); buzz(15);
+  burst(hx(0), hy(.1), 16, ['sparkle', 'heart'], k === 'soft' ? ['#fff', '#ffd6e0'] : ['#fff', '#cfeefe'], 300);
+  ring(hx(0), hy(0), head.r * 1.6, '#fff');
+  banner(`${CREAMS[k].icon} ${CREAMS[k].name} applied!`); clearTimeout(introT); introT = setTimeout(() => banner(null), 2500);
+  say(k === 'soft' ? 'ooh, so soft~' : 'silky smooth!', 1.6);
+  updateCreamButtons();
+}
+function renderShop() {
+  $('#shopBal').textContent = `You have ⭐ ${save.total}`;
+  $('#shopList').innerHTML = Object.entries(CREAMS).map(([k, c]) => `
+    <div class="prod"><div class="pic">${c.icon}</div>
+      <div class="pinfo"><b>${c.name}</b><small>${c.desc}</small><i>You own: ${save.creams[k]}</i></div>
+      <button class="pbtn buy" data-k="${k}" ${save.total < c.price ? 'disabled' : ''}>⭐ ${c.price}</button></div>`).join('');
+  document.querySelectorAll('.buy').forEach(b => b.addEventListener('click', () => {
+    const k = b.dataset.k, c = CREAMS[k];
+    if (save.total < c.price) return;
+    save.total -= c.price; save.creams[k]++; persist();
+    SFX.collect(2); SFX.sparkle(2); buzz(15); toast(`Bought ${c.name}! Tap ${c.icon} during a visit to use it`);
+    renderShop(); updateHud(); updateCreamButtons();
+  }));
+}
+function renderStats() {
+  const st = save.stats;
+  const rows = [['💆', 'Clients pampered', st.clients], ['🔴', 'Pimples popped', st.pimples], ['💥', 'Big pimples', st.big], ['🌋', 'Huge pimples', st.huge],
+    ['⚫', 'Blackheads', st.blackheads], ['〰️', 'Hairs plucked', st.hairs], ['🫧', 'Juicy roots', st.juicy], ['🌀', 'Hidden hairs', st.ingrown],
+    ['🔥', 'Best combo', st.bestCombo ? 'x' + st.bestCombo : '–'], ['⏱', 'Rush best', save.rushBest], ['🧴', 'Creams used', st.creams], ['⭐', 'Stars', save.total]];
+  $('#statGrid').innerHTML = rows.map(([i, l, v]) => `<div class="stat"><span>${i}</span><b>${v}</b><small>${l}</small></div>`).join('');
+}
+function openScreen(id, render) { SFX.init(); SFX.click(); render(); $(id).classList.remove('hide'); }
+
 function banner(txt) { const b = $('#banner'); if (txt) { b.textContent = txt; b.classList.remove('hide'); } else b.classList.add('hide'); }
 
 function nextClient() {
@@ -1170,7 +1318,7 @@ function update(dt) {
       if (exitT >= 1) { exitT = -1; if (mode === 'rush') genLevel(3 + rush.served, { rush: true }); else genLevel(save.level); buildBg(); enterT = 0; particles = []; }
     } else if (enterT < 1) {
       enterT = Math.min(1, enterT + dt / (mode === 'rush' ? .55 : .9)); offX = (1 - easeOutBack(enterT)) * W * 1.2;
-      if (enterT >= 1) { state = 'play'; offX = 0; wob.v += 8; SFX.boing(.2); say(pick(SAY_HI).replace('{n}', client.name), 2); SFX.giggle(); }
+      if (enterT >= 1) { state = 'play'; offX = 0; wob.v += 8; SFX.boing(.2); say(pick(SAY_HI).replace('{n}', client.name), 2); SFX.giggle(); showIntro(); }
     }
   }
   hx = n => head.cx + offX + n * head.r * (1 + wob.x * .045);
@@ -1610,6 +1758,13 @@ function drawPimple(p) {
   ctx.fillStyle = 'rgba(255,255,255,.95)'; ell(-R * .42, -R * .45, R * .2, R * .13, -.6); ctx.fill();
   ell(-R * .1, -R * .62, R * .07, R * .07); ctx.fill();
   ctx.restore();
+  if (p.kind === 'huge') {
+    for (let i = 0; i < p.maxHp; i++) {
+      const px = P.x + (i - (p.maxHp - 1) / 2) * 13 * Math.max(S, .8), py = P.y + R * 1.55 + 10;
+      ell(px, py, 4.5 * Math.max(S, .8), 4.5 * Math.max(S, .8));
+      ctx.fillStyle = i < p.hp ? '#ff7f9e' : 'rgba(255,255,255,.7)'; ctx.fill(); ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
+    }
+  }
   // pressure ring
   if (pr > .04) {
     const rr = R * 2.1 + 6;
@@ -2031,13 +2186,20 @@ $('#play').addEventListener('click', () => {
   SFX.init(); SFX.click(); SFX.whoosh(); buzz(15);
   if (mode !== 'relax') { mode = 'relax'; rush = null; genLevel(save.level); buildBg(); }
   $('#title').classList.add('hide'); $('#hud').classList.remove('off');
-  state = 'play'; wob.v += 9; SFX.boing(.2); updateHud();
+  state = 'play'; wob.v += 9; SFX.boing(.2); updateHud(); showIntro();
   setTimeout(() => { say(pick(SAY_HI).replace('{n}', client.name), 2); SFX.giggle(); }, 250);
   refreshScoreTarget();
   if (!('ontouchstart' in window) && navigator.maxTouchPoints < 2) setTimeout(() => toast('On desktop: hold to squeeze, drag to pull'), 1500);
 });
 $('#next').addEventListener('click', nextClient);
 $('#bHome').addEventListener('click', goHome);
+$('#shopBtn').addEventListener('click', () => openScreen('#shop', renderShop));
+$('#winShop').addEventListener('click', () => openScreen('#shop', renderShop));
+$('#statsBtn').addEventListener('click', () => openScreen('#stats', renderStats));
+$('#shopClose').addEventListener('click', () => { SFX.click(); $('#shop').classList.add('hide'); updateCreamButtons(); });
+$('#statsClose').addEventListener('click', () => { SFX.click(); $('#stats').classList.add('hide'); });
+$('#use-soft').addEventListener('click', () => useCream('soft'));
+$('#use-silky').addEventListener('click', () => useCream('silky'));
 $('#rushBtn').addEventListener('click', startRush);
 $('#rushAgain').addEventListener('click', startRush);
 $('#rushHome').addEventListener('click', goHome);
