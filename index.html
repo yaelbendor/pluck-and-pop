@@ -6,6 +6,7 @@
 <title>Pluck &amp; Pop</title>
 <meta name="description" content="A cozy little skin spa. Pinch with two fingers to pop and pluck.">
 <meta name="theme-color" content="#ffe3e8">
+<meta name="color-scheme" content="only light">
 <meta http-equiv="Cache-Control" content="no-cache">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -19,6 +20,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
+  color-scheme: only light;
   --plum:#6b4660; --pink:#ff7f9e; --pink2:#ffb3c6; --cream:#fffaf3; --mint:#9fdcc0;
   --shadow:0 6px 0 rgba(150,80,110,.18), 0 14px 30px rgba(150,80,110,.18);
 }
@@ -73,7 +75,12 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:
 .screen:not(.hide) .card{transform:scale(1);opacity:1}
 #rushOver,#shop,#stats{background:rgba(255,220,230,.55)}
 #shop,#stats{z-index:30}
-#shop .card,#stats .card{width:min(370px,92vw);max-height:calc(100% - 20px);overflow:auto}
+#shop,#stats{padding:calc(env(safe-area-inset-top) + 12px) 12px calc(env(safe-area-inset-bottom) + 12px)}
+.card.panel{position:relative;width:min(370px,94vw);max-height:100%;display:flex;flex-direction:column;align-items:center;padding:18px 16px 18px}
+.card.panel .scroll{flex:1 1 auto;min-height:0;width:100%;overflow-y:auto;-webkit-overflow-scrolling:touch;touch-action:pan-y;overscroll-behavior:contain;margin:6px 0 12px}
+.card.panel .btn{flex:0 0 auto;font-size:20px;padding:12px 30px}
+.xbtn{position:absolute;top:10px;right:10px;width:34px;height:34px;border:0;border-radius:50%;background:#fff;color:var(--plum);font-size:16px;font-family:inherit;box-shadow:0 2px 0 rgba(150,80,110,.15);cursor:pointer}
+.prod:first-child{margin-top:0}
 .prod{display:grid;grid-template-columns:auto 1fr;grid-template-areas:'pic info' 'pic buy';align-items:center;column-gap:12px;row-gap:8px;text-align:left;background:#fff;border-radius:18px;padding:12px 14px;margin:10px 0;box-shadow:0 3px 0 rgba(150,80,110,.1)}
 .prod .pic{grid-area:pic;font-size:38px}
 .pinfo{grid-area:info;min-width:0}
@@ -83,7 +90,7 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:
 .buy{grid-area:buy;justify-self:start;font-size:15px;padding:8px 16px}
 .buy[disabled]{opacity:.4}
 .note{font-size:13px!important;margin:4px 0 14px!important}
-#statGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0 16px}
+#statGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:4px 0}
 .stat{background:#fff;border-radius:16px;padding:8px 4px;display:flex;flex-direction:column;align-items:center;box-shadow:0 3px 0 rgba(150,80,110,.1);min-width:0}
 .stat span{font-size:20px}
 .stat b{font-size:20px;font-variant-numeric:tabular-nums}
@@ -139,23 +146,27 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:
     <div class="howto">Use <b>two fingers</b>: pinch a bump to <b>pop</b> it, or pinch a hair and <b>pull</b> 🔊 sound on!</div>
     <div class="tip" id="iosTip" hidden>Play it like an app: tap <b>Share</b>, then <b>Add to Home Screen</b></div>
   </div>
-  <div id="ver">v10</div>
+  <div id="ver">v11</div>
 </div>
 
 <div id="shop" class="screen hide">
-  <div class="card">
+  <div class="card panel">
+    <button class="xbtn" id="shopX" aria-label="Close the shop">✕</button>
     <h2>Cream shop</h2>
     <p id="shopBal">You have ⭐ 0</p>
-    <div id="shopList"></div>
-    <p class="note">Tap a cream's button at the top during a visit to use it on that client.</p>
+    <div class="scroll">
+      <div id="shopList"></div>
+      <p class="note">Tap a cream's button at the top during a visit to use it on that client.</p>
+    </div>
     <button class="btn alt" id="shopClose">Done</button>
   </div>
 </div>
 
 <div id="stats" class="screen hide">
-  <div class="card">
+  <div class="card panel">
+    <button class="xbtn" id="statsX" aria-label="Close stats">✕</button>
     <h2>Your spa stats</h2>
-    <div id="statGrid"></div>
+    <div class="scroll"><div id="statGrid"></div></div>
     <button class="btn alt" id="statsClose">Done</button>
   </div>
 </div>
@@ -802,7 +813,7 @@ const mouseUp = e => { const p = e.pointerType === 'mouse' && pointers.get('m');
 cv.addEventListener('pointerup', mouseUp);
 cv.addEventListener('pointercancel', mouseUp);
 document.addEventListener('gesturestart', e => e.preventDefault());
-document.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
+document.addEventListener('touchmove', e => { if (!(e.target.closest && e.target.closest('.scroll'))) e.preventDefault(); }, { passive: false });
 document.addEventListener('contextmenu', e => e.preventDefault());
 document.addEventListener('dblclick', e => e.preventDefault());
 
@@ -2199,6 +2210,8 @@ $('#winShop').addEventListener('click', () => { $('#win').classList.add('hide');
 $('#statsBtn').addEventListener('click', () => openScreen('#stats', renderStats));
 $('#shopClose').addEventListener('click', () => { SFX.click(); $('#shop').classList.add('hide'); updateCreamButtons(); if (state === 'win') $('#win').classList.remove('hide'); });
 $('#statsClose').addEventListener('click', () => { SFX.click(); $('#stats').classList.add('hide'); });
+$('#statsX').addEventListener('click', () => $('#statsClose').click());
+$('#shopX').addEventListener('click', () => $('#shopClose').click());
 $('#use-soft').addEventListener('click', () => useCream('soft'));
 $('#use-silky').addEventListener('click', () => useCream('silky'));
 $('#rushBtn').addEventListener('click', startRush);
